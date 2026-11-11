@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: ruff check .
+      # The level tests are red on purpose until a player solves them,
+      # so CI only checks that every test is collected and that the game boots.
+      - run: pytest --collect-only -q
+      - name: Boot the game and check its API
+        run: |
+          python -m uvicorn zoo.server:app --port 8000 &
+          for attempt in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8000/healthz && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/api/game/systems > /dev/null
+          curl -fsS -X POST "http://127.0.0.1:8000/api/game/feed?animal=lion" > /dev/null
+
+  image:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t zoo-ops:${{ github.sha }} .

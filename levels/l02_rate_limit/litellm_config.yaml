@@ -1,0 +1,25 @@
+# Reference only: a LiteLLM proxy routing model names to providers, with fallbacks.
+# Per-key budgets are set when a virtual key is created:
+#   POST /key/generate {"rpm_limit": 60, "tpm_limit": 6000}
+# Run with: litellm --config litellm_config.yaml --port 4000
+
+model_list:
+  - model_name: owl
+    litellm_params:
+      model: mistral/mistral-large-latest
+      api_key: os.environ/MISTRAL_API_KEY
+      rpm: 120
+  - model_name: parrot
+    litellm_params:
+      model: mistral/mistral-small-latest
+      api_key: os.environ/MISTRAL_API_KEY
+
+router_settings:
+  num_retries: 2
+  timeout: 30
+  fallbacks:
+    - owl: ["parrot"]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

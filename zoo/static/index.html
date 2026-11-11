@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zoo Ops</title>
+  <meta name="description" content="Run a cute zoo for one shift. Its backend gets better as you build system design patterns.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23a8754f' stroke='%234b3757' stroke-width='3'/%3E%3Ccircle cx='11' cy='14' r='5' fill='%23f6e3c2'/%3E%3Ccircle cx='21' cy='14' r='5' fill='%23f6e3c2'/%3E%3Ccircle cx='11' cy='14' r='2' fill='%232b2233'/%3E%3Ccircle cx='21' cy='14' r='2' fill='%232b2233'/%3E%3Cpath d='M14 18h4l-2 4z' fill='%23f2a23a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="/">
+        <span class="brand-face" id="brand-face"></span>
+        <span class="brand-name">Zoo Ops</span>
+      </a>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button class="tab" role="tab" id="tab-play" aria-controls="panel-play" aria-selected="true" data-tab="play" type="button">Play</button>
+        <button class="tab" role="tab" id="tab-stations" aria-controls="panel-stations" aria-selected="false" data-tab="stations" type="button">
+          Stations <span class="tab-count" id="stations-count">-/10</span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel play" id="panel-play" role="tabpanel" aria-labelledby="tab-play">
+        <div class="stage" id="world">
+          <canvas aria-label="The zoo. Click visitors, animals, dirt and the adoption cottage."></canvas>
+
+          <div class="hud">
+            <div class="pill" title="Coins">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ffc93c" stroke="#4b3757" stroke-width="2.5"/><circle cx="12" cy="12" r="5" fill="#ffe08a"/></svg>
+              <span id="hud-coins">0</span>
+            </div>
+            <div class="pill pill-rep" title="Reputation">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C5 15 2.5 11.5 2.5 8a5 5 0 0 1 9.5-2.2A5 5 0 0 1 21.5 8c0 3.5-2.5 7-9.5 13z" fill="#ff6b8f" stroke="#4b3757" stroke-width="2.5" stroke-linejoin="round"/></svg>
+              <span class="meter"><span class="meter-fill" id="hud-rep"></span></span>
+            </div>
+            <div class="pill" title="Visitors served">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#9be28a" stroke="#4b3757" stroke-width="2.5"/><circle cx="8.5" cy="10" r="1.6" fill="#4b3757"/><circle cx="15.5" cy="10" r="1.6" fill="#4b3757"/><path d="M8 14.5c2 2.5 6 2.5 8 0" fill="none" stroke="#4b3757" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <span id="hud-served">0</span>
+            </div>
+
+            <div class="day" title="The shift, from morning to closing time">
+              <div class="day-track">
+                <div class="day-pins" id="day-pins"></div>
+                <i class="day-sun" id="day-sun"></i>
+              </div>
+              <span class="day-clock" id="hud-clock">3:00</span>
+            </div>
+
+            <div class="pill pill-p95" title="Wait time p95, from level 05 Observability">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" fill="#ffffff" stroke="#4b3757" stroke-width="2.5"/><path d="M12 8.5V13l3 2M9.5 2.5h5" fill="none" stroke="#4b3757" stroke-width="2.5" stroke-linecap="round"/></svg>
+              <span id="hud-p95">--</span>
+            </div>
+            <button class="round" id="sound" type="button" aria-label="Sound on or off" data-muted="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#4b3757"/><path class="waves" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" fill="none" stroke="#4b3757" stroke-width="2.2" stroke-linecap="round"/><path class="cross" d="M15.5 9.5l5 5m0-5l-5 5" fill="none" stroke="#4b3757" stroke-width="2.2" stroke-linecap="round"/></svg>
+            </button>
+            <button class="round" id="pause" type="button" aria-label="Pause">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.5" height="14" rx="1.5" fill="#4b3757"/><rect x="13.5" y="5" width="4.5" height="14" rx="1.5" fill="#4b3757"/></svg>
+            </button>
+          </div>
+
+          <div class="pager" id="pager" hidden></div>
+          <p class="speech" hidden></p>
+          <div class="world-tip" hidden></div>
+
+          <div class="overlay" id="overlay">
+            <div class="overlay-card" id="overlay-card"></div>
+          </div>
+        </div>
+
+        <aside class="journal" aria-label="Shift journal">
+          <h2 class="journal-title">Shift journal</h2>
+          <ol class="log" id="log" aria-live="polite"></ol>
+        </aside>
+
+        <div class="dock-wrap">
+          <p class="dock-title">The ten patterns running your zoo. They light up when they act.</p>
+          <div class="dock" id="dock"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-stations" role="tabpanel" aria-labelledby="tab-stations" hidden>
+        <div class="stations-intro">
+          <p class="eyebrow">Behind the scenes</p>
+          <h1>The ten systems that run the zoo</h1>
+          <p class="lede">
+            Each system is one system design pattern with a piece of code missing.
+            Build it, pass its tests, and its keeper wakes up in the game.
+          </p>
+        </div>
+        <div class="map" id="map"></div>
+      </section>
+    </main>
+  </div>
+
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" data-close></div>
+    <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <button class="drawer-close" type="button" data-close aria-label="Close">x</button>
+      <div class="drawer-head">
+        <div class="drawer-sprite" id="drawer-sprite"></div>
+        <div>
+          <p class="eyebrow" id="drawer-eyebrow"></p>
+          <h2 id="drawer-title"></h2>
+          <span class="chip" id="drawer-chip"></span>
+        </div>
+      </div>
+      <p class="drawer-pitch" id="drawer-pitch"></p>
+      <p class="drawer-headline" id="drawer-headline"></p>
+      <h3>In the game</h3>
+      <div class="drawer-game" id="drawer-game"></div>
+      <h3>Scene replay</h3>
+      <ol class="scene-log" id="drawer-log"></ol>
+      <h3>Readings</h3>
+      <dl class="metrics" id="drawer-metrics"></dl>
+      <h3>What you build</h3>
+      <p class="muted">In <code id="drawer-file"></code></p>
+      <ul class="todos" id="drawer-todos"></ul>
+      <pre class="command" id="drawer-command"></pre>
+      <button class="button button-primary" id="drawer-replay" type="button">Replay the scene</button>
+    </div>
+  </aside>
+
+  <script src="/static/js/main.js" type="module"></script>
+</body>
+</html>
