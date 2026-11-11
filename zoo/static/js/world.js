@@ -80,6 +80,7 @@ export class World {
       x: pen.x + pen.w / 2, y: pen.y + pen.h / 2 + 30, tx: 0, ty: 0, nextMove: 0, flip: false,
     }]));
     this.fox = { ...P.fox, flip: false };
+    this.keeper = { x: 600, y: 540, flip: false, waiting: 0 };
     this.callouts = [];
     this.flights = [];
     this.waits = [];
@@ -223,6 +224,11 @@ export class World {
       case "wait":
         this.waits.push({ ...this.anchor(event.anchor, "06"), start: time, seconds: event.seconds });
         break;
+      case "combo":
+        this.fx.pop(`Combo x${event.level}!`, this.keeper.x, this.keeper.y - 84, "#ffd23f", 26);
+        this.fx.burst("spark", this.keeper.x, this.keeper.y - 60, 10, "#ffd23f");
+        this.sfx.play("good");
+        break;
       case "shake":
         this.fx.shake = event.amount;
         break;
@@ -294,6 +300,7 @@ export class World {
     this.addVisitors(actors, ctx, time, move);
     this.addAdoption(actors, ctx, time);
     this.addRaccoon(actors, ctx, time);
+    this.addKeeper(actors, ctx, time, move);
     actors.sort((a, b) => a.y - b.y);
     for (const actor of actors) actor.draw();
     const small = (hit) => (hit.key.startsWith("dirt") ? 1 : 0);
@@ -347,6 +354,13 @@ export class World {
       A.cone(ctx, x + width / 2 + 14, y + 12, 13);
     }
 
+    if (game.t < game.brokenReleaseUntil) {
+      this.hit("rollback", P.owl.x - 110, P.owl.y - 110, 220, 150, "Roll the kiosk back to v1",
+        () => game.enqueue("rollback", () => P.bridgeFoot, () => game.rollback(),
+          { valid: () => game.t < game.brokenReleaseUntil }));
+      A.bubble(ctx, "click to roll back!", P.owl.x + 96, P.owl.y - 8 + Math.sin(time * 6) * 2, { size: 13 });
+    }
+
     // The version plate of the kiosk (deploys)
     const release = game.releaseEvent;
     const broken = game.t < game.brokenReleaseUntil;
@@ -387,7 +401,8 @@ export class World {
         }
       } else {
         this.hit(`dirt:${pen.id}`, x - 20, y - 26, 40, 40, `Clean ${pen.name}'s pen`,
-          () => game.clean(pen));
+          () => game.enqueue(`dirt:${pen.id}`, () => this.penDoor(pen.id), () => game.clean(pen),
+            { valid: () => pen.dirty && pen.cleanAt === null }));
       }
     }
   }
@@ -566,7 +581,8 @@ export class World {
       }
       const tip = sick ? `${pen.name} is too sick to eat` : pen.busy ? `${pen.name}: order on its way`
         : `Feed ${pen.name}`;
-      this.hit(`pen:${pen.id}`, box.x, box.y, box.w, box.h, tip, () => game.feed(pen));
+      this.hit(`pen:${pen.id}`, box.x, box.y, box.w, box.h, tip,
+        () => game.enqueue(`pen:${pen.id}`, () => this.penDoor(pen.id), () => game.feed(pen)));
     });
   }
 
@@ -600,7 +616,7 @@ export class World {
         if (visitor.state !== "waiting") return;
         const top = position.y - 62;
         if (!blind) {
-          const k = clamp(visitor.patience / PATIENCE, 0, 1);
+          const k = clamp(visitor.patience / visitor.maxPatience, 0, 1);
           A.rrect(ctx, position.x - 19, top, 38, 9, 4.5, "rgba(75,55,87,0.85)");
           if (k > 0.05) {
             A.rrect(ctx, position.x - 17, top + 2, 34 * k, 5, 2.5,
@@ -608,6 +624,10 @@ export class World {
           }
         }
         if (upset) A.anger(ctx, position.x + 17, top - 6, 5);
+        if (visitor.vip) {
+          A.star(ctx, position.x, top - 12 + Math.sin(time * 5) * 2, 9, "#ffc93c");
+          A.text(ctx, "VIP", position.x, top - 26, { size: 11, color: "#ffd23f", stroke: A.OUTLINE, weight: 800 });
+        }
         if (front && !walking && !game.kioskBusy && game.t < 30) {
           const bounce = Math.sin(time * 6) * 4;
           A.poly(ctx, [position.x - 9, top - 26 + bounce, position.x + 9, top - 26 + bounce,
@@ -618,7 +638,10 @@ export class World {
       } });
       if (visitor.state === "waiting") {
         this.hit(`visitor:${visitor.id}`, position.x - 22, position.y - 60, 44, 64,
-          `"${visitor.question}" Click to ask the Owl.`, () => game.serve(visitor));
+          `"${visitor.question}" Click to ask the Owl.`,
+          () => game.enqueue(`visitor:${visitor.id}`, () => ({ x: position.x + 34, y: position.y + 8 }),
+            () => game.serve(visitor),
+            { valid: () => visitor.state === "waiting" && !visitor.gone, ready: () => !game.kioskBusy }));
       }
     }
 
@@ -664,7 +687,8 @@ export class World {
         A.rrect(ctx, cottage.x - 34, cottage.y - 114, 68 * left, 5, 2.5, left < 0.3 ? "#ff6b6b" : "#ffb347");
       } });
       this.hit("adoption", cottage.x - 100, cottage.y - 110, 170, 150, "Approve the adoption",
-        () => game.approveAdoption());
+        () => game.enqueue("adoption", () => ({ x: cottage.x + 8, y: cottage.y + 26 }),
+          () => game.approveAdoption(), { valid: () => Boolean(game.adoption) }));
     } else if (game.adoptionResult && game.t - game.adoptionResult.at < 4.5) {
       const k = (game.t - game.adoptionResult.at) / 4.5;
       const safe = game.adoptionResult.safe;
@@ -697,7 +721,13 @@ export class World {
     let point;
     let options = { time, flip: true, lift: hop(time * 0.8) * 0.6 };
     let loot = false;
-    if (event.blocked) {
+    if (event.fledAt !== null) {
+      const fled = this.game.t - event.fledAt;
+      if (fled > 1.3) return;
+      const from = along([P.staffDoor, lurk, chest], (event.fledAt - event.at) / 4.2);
+      point = between(from, { x: 960, y: 800 }, fled / 1.3);
+      options = { time, flip: false, lift: hop(time * 1.6), eyes: "sad" };
+    } else if (event.blocked) {
       if (age > 5) return;
       if (age < 2.2) point = between(P.staffDoor, lurk, age / 2.2);
       else if (age < 2.7) {
@@ -726,7 +756,66 @@ export class World {
       }
       A.drawCritter(ctx, "raccoon", point.x, point.y, 52, options);
       if (event.blocked && age > 2.2 && age < 2.9) A.bubble(ctx, "!", point.x, point.y - 62, { size: 16 });
+      if (!event.blocked && event.fledAt === null && age < 4.2) {
+        A.bubble(ctx, `click! ${3 - event.scares}`, point.x, point.y - 62 + Math.sin(time * 8) * 2, { size: 13 });
+      }
     } });
+    if (!event.blocked && event.fledAt === null && age < 4.2) {
+      this.hit("raccoon", point.x - 34, point.y - 64, 68, 74, "Scare the raccoon away!", () => {
+        this.fx.burst("puff", point.x, point.y - 30, 5);
+        this.game.scareRaccoon();
+      });
+    }
+  }
+
+  penDoor(id) {
+    const box = PENS[id];
+    return { x: box.x + box.w / 2, y: box.y < 300 ? box.y + box.h + 18 : box.y - 30 };
+  }
+
+  /** Bao, the player's keeper: walks to the first job in his list, does it, takes the next. */
+  addKeeper(actors, ctx, time, move) {
+    const game = this.game;
+    const keeper = this.keeper;
+    while (game.tasks.length && !game.tasks[0].valid()) game.tasks.shift();
+    const task = game.tasks[0];
+    let walking = false;
+    if (task) {
+      walking = moveToward(keeper, task.point(), 290, move);
+      if (!walking && move) {
+        keeper.waiting += move;
+        if (task.ready() || keeper.waiting > 5) {
+          game.tasks.shift();
+          keeper.waiting = 0;
+          if (task.ready()) {
+            task.run();
+            this.fx.burst("puff", keeper.x, keeper.y - 6, 4);
+          }
+        }
+      } else {
+        keeper.waiting = 0;
+      }
+    }
+    const points = game.tasks.map((item) => item.point());
+    const said = game.bubbles.keeper;
+    actors.push({ y: keeper.y, draw: () => {
+      A.drawCritter(ctx, "panda", keeper.x, keeper.y, 60, { time, flip: keeper.flip,
+        lift: walking ? hop(time * 1.2) : 0, eyes: blinking(time, 7) ? "blink" : "open",
+        squash: walking ? 0 : Math.sin(time * 2.6) * 0.02 });
+      if (said && said.until > game.t) A.bubble(ctx, said.text, keeper.x, keeper.y - 66, { size: 13 });
+    } });
+    if (points.length) {
+      ctx.save();
+      ctx.setLineDash([3, 9]);
+      ctx.lineDashOffset = -time * 30;
+      A.line(ctx, [keeper.x, keeper.y - 4, ...points.flatMap((point) => [point.x, point.y - 4])],
+        "rgba(255,255,255,0.9)", 3.5);
+      ctx.restore();
+      points.forEach((point, index) => {
+        A.oval(ctx, point.x, point.y - 4, 10, 10, "#58c96c", A.OUTLINE, 2.5);
+        A.text(ctx, String(index + 1), point.x, point.y - 3, { size: 12, color: "#ffffff", weight: 800 });
+      });
+    }
   }
 
   /* Things in the air */
@@ -744,7 +833,8 @@ export class World {
     if (pigeons) {
       const age = game.t - pigeons.at;
       const limit = pigeons.blocked ? 4.6 : 15;
-      for (let i = 0; i < 10 && age < limit; i += 1) {
+      const flock = pigeons.blocked ? 10 : pigeons.left;
+      for (let i = 0; i < flock && age < limit; i += 1) {
         const wobble = { x: Math.sin(time * 5 + i * 2) * 6, y: Math.cos(time * 6 + i) * 5 };
         let point;
         if (pigeons.blocked) {
@@ -759,8 +849,16 @@ export class World {
             : age < 12 ? around
               : between(around, { x: around.x + 500, y: -80 }, (age - 12) / 3);
         }
-        A.drawCritter(ctx, "pigeon", point.x + wobble.x, point.y + wobble.y, 34,
+        const px = point.x + wobble.x;
+        const py = point.y + wobble.y;
+        A.drawCritter(ctx, "pigeon", px, py, 34,
           { time, shadow: false, flap: flap(i), flip: i % 2 === 0, eyes: pigeons.blocked && age > 1.3 ? "sad" : "open" });
+        if (!pigeons.blocked && age < 12) {
+          this.hit(`pigeon:${i}`, px - 24, py - 44, 48, 52, "Shoo!", () => {
+            this.fx.burst("puff", px, py - 18, 6);
+            game.shooPigeon();
+          });
+        }
       }
     }
 

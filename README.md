@@ -59,12 +59,13 @@ The game opens on http://127.0.0.1:8000. Play one shift first, see everything go
 
 ## How you play
 
-Everything happens in the zoo, with the mouse:
+You are **Bao, the panda keeper**. Click a target and Bao walks there to do the job, so the order you click in is your route:
 
-- **Click a visitor** in the line to send their question across the bridge to the Owl.
+- **Click a visitor** in the line to send their question across the bridge to the Owl. Serve several in a row to build a **combo**. Golden **VIPs** pay triple but hate waiting.
 - **Click an animal** to feed it. Once is enough: overfed animals get sick.
 - **Click dirt** to clean a pen, and **the pink cottage** when families wait to adopt.
-- Survive the incidents. Coins, reputation and visitors served make your score, from zero to three stars.
+- **A keeper is asleep?** Do its job by hand: click the pigeons to shoo them, click the raccoon to scare it off, run to the kiosk to roll back a bad release. Building the pattern is what stops you running.
+- Each shift you survive unlocks the **next day**, with more visitors. Coins, reputation and visitors served make your score, from zero to three stars.
 
 Three things always tell you which pattern is at work:
 

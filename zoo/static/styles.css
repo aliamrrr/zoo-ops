@@ -447,6 +447,30 @@ button.pattern-chip:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.hud-under {
+  position: absolute;
+  top: 6.4cqi;
+  left: 1.6cqi;
+  display: flex;
+  gap: 0.8cqi;
+  pointer-events: none;
+}
+
+.tag-day,
+.tag-combo {
+  padding: 0 1.1cqi;
+  font: 800 clamp(11px, 1.5cqi, 17px) var(--font-display);
+  color: #ffffff;
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+.tag-combo {
+  color: var(--ink);
+  background: #ffd23f;
+  border: 3px solid var(--ink);
+}
+
 .pager {
   position: absolute;
   top: 9.5cqi;

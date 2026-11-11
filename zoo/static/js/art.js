@@ -97,6 +97,8 @@ const SPECS = {
     neckPatch: "#7fbfae", feet: "#e2726a" },
   raccoon: { body: "#9399a8", belly: "#d5d9e2", ears: "point", earIn: "#5b6070", mask: "#454a5a",
     tail: "ring", muzzle: "#eceff4" },
+  panda: { body: "#ffffff", belly: "#f1f1f6", ears: "round", earColor: "#3a3344",
+    patches: "#3a3344", feet: "#3a3344", arms: "#3a3344", hat: "cap", capColor: "#58c96c" },
   parrot: { body: "#e5574f", belly: "#f28a7e", beak: "hook", wings: "#3f8fdc", face: "parrot",
     feet: "#8a8f9c", tail: "feather" },
 };
@@ -387,7 +389,7 @@ export function drawCritter(ctx, kind, x, y, s, options = {}) {
     } else if (spec.paws) {
       oval(ctx, side * 0.24 * u, -0.24 * u, 0.08 * u, 0.06 * u, spec.paws, OUTLINE, lw);
     } else {
-      oval(ctx, side * 0.21 * u, -0.27 * u, 0.05 * u, 0.085 * u, c(spec.body), OUTLINE, lw,
+      oval(ctx, side * 0.21 * u, -0.27 * u, 0.05 * u, 0.085 * u, c(spec.arms || spec.body), OUTLINE, lw,
         side * -0.45);
     }
   }
@@ -424,8 +426,9 @@ export function drawCritter(ctx, kind, x, y, s, options = {}) {
     ctx.beginPath();
     ctx.ellipse(0, -0.8 * u, 0.2 * u, 0.13 * u, 0, Math.PI, TAU);
     ctx.closePath();
-    paint(ctx, "#4a7fd6", OUTLINE, lw);
-    rrect(ctx, -0.02 * u, -0.83 * u, 0.3 * u, 0.045 * u, 0.02 * u, "#3566b8", OUTLINE, lw);
+    const cap = spec.capColor || "#4a7fd6";
+    paint(ctx, cap, OUTLINE, lw);
+    rrect(ctx, -0.02 * u, -0.83 * u, 0.3 * u, 0.045 * u, 0.02 * u, mix(cap, "#000000", 0.2), OUTLINE, lw);
     oval(ctx, 0, -0.86 * u, 0.03 * u, 0.03 * u, "#ffd23f");
   }
   ctx.restore();

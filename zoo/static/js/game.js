@@ -3,13 +3,13 @@ import { critterCanvas } from "./art.js";
 import { SYSTEMS, SYSTEM_IDS } from "./systems.js";
 
 export const SHIFT_SECONDS = 180;
-export const PATIENCE = 26;
+export const PATIENCE = 30;
 export const HUNGRY_AT = 25;
 const TICK_MS = 100;
 const START_COINS = 20;
 const START_REP = 70;
 const MAX_QUEUE = 6;
-const HUNGER_DECAY = 1.15;
+const HUNGER_DECAY = 1.0;
 const HUNGER_PER_GRAM = 0.8;
 const STUFFED_AT = 125;
 const SICK_SECONDS = 12;
@@ -20,6 +20,8 @@ const DIRT_EVERY = 15;
 const ADOPTION_WINDOW = 16;
 const STAR_SCORES = [150, 350, 550];
 const BEST_KEY = "zoo-ops-best-score";
+const DAY_KEY = "zoo-ops-day";
+const MAX_TASKS = 4;
 
 export const ANIMALS = [
   { id: "lion", name: "Leo", kind: "lion" },
@@ -70,6 +72,22 @@ export function patternChip(id, tag = "span") {
 function nearestRank(values, p) {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)];
+}
+
+function readDay() {
+  try {
+    return Math.max(1, Number(localStorage.getItem(DAY_KEY)) || 1);
+  } catch {
+    return 1;
+  }
+}
+
+function writeDay(day) {
+  try {
+    localStorage.setItem(DAY_KEY, String(day));
+  } catch {
+    /* private mode: every visit starts at day one */
+  }
 }
 
 function readBest() {
@@ -171,6 +189,9 @@ export class Game {
     this.blame = {};
     this.notes = new Set();
     this.events = [];
+    this.tasks = [];
+    this.combo = 0;
+    this.day = readDay();
     this.timers = [];
     this.cooldowns = {};
     this.stats = Object.fromEntries(SYSTEM_IDS.map((id) => [id, { good: 0, bad: 0 }]));
@@ -247,6 +268,7 @@ export class Game {
     const stars = STAR_SCORES.filter((needed) => score >= needed).length;
     const best = readBest();
     if (score > best) writeBest(score);
+    if (won) writeDay(this.day + 1);
     this.sfx(won ? "win" : "lose");
     if (won) this.fx("confetti");
 
@@ -259,7 +281,7 @@ export class Game {
       }))
       : el("p", { class: "muted", text: "No system let you down. Flawless backend." });
     this.overlay([
-      el("p", { class: "eyebrow", text: reason }),
+      el("p", { class: "eyebrow", text: won ? `Day ${this.day} complete` : reason }),
       el("div", { class: "stars", "aria-label": `${stars} of 3 stars` }, [0, 1, 2].map((i) =>
         el("span", { class: "star", "data-on": String(i < stars) }))),
       el("div", { class: "score", text: String(score) }),
@@ -271,7 +293,8 @@ export class Game {
       ]),
       el("h2", { class: "overlay-title", text: "What cost you the most" }),
       lessons,
-    ], [["Play again", () => this.start(), "button-primary"]]);
+    ], [[won ? `Start day ${this.day + 1}` : "Try this day again", () => this.start(),
+      "button-primary"]]);
   }
 
   stat(label, value) {
@@ -280,7 +303,7 @@ export class Game {
 
   showIntro() {
     const known = Object.keys(this.systems).length > 0;
-    const cast = el("div", { class: "cast" }, ["rabbit", "squirrel", "owl", "fox", "penguin"].map(
+    const cast = el("div", { class: "cast" }, ["rabbit", "owl", "panda", "fox", "penguin"].map(
       (kind, i) => critterCanvas(kind, i === 2 ? 96 : 68)));
     const dots = el("div", { class: "system-dots" }, SYSTEM_IDS.map((id) =>
       el("i", { "data-on": String(this.online(id)), style: `--chip:${SYSTEMS[id].color}`,
@@ -288,11 +311,11 @@ export class Game {
     this.overlay([
       cast,
       el("h1", { class: "logo", text: "Zoo Ops" }),
-      el("p", { class: "tagline", text: "One shift. Three minutes. Keep everyone happy." }),
+      el("p", { class: "tagline", text: `Day ${readDay()}. You are Bao, the panda keeper.` }),
       el("ul", { class: "howto" }, [
-        el("li", { text: "Click a visitor to send their question to the Owl." }),
-        el("li", { text: "Click an animal to feed it. Once is enough!" }),
-        el("li", { text: "Click dirt to clean it, and the pink cottage when families wait." }),
+        el("li", { text: "Click a visitor, an animal, dirt or the pink cottage: Bao walks there and does the job. Plan his route!" }),
+        el("li", { text: "Serve visitors in a row to build a combo. Golden VIPs pay triple but hate waiting." }),
+        el("li", { text: "A keeper is asleep? Do its job by hand: click pigeons to shoo them, click the raccoon to scare it." }),
       ]),
       el("div", { class: "systems-line" }, [
         dots,
@@ -330,7 +353,8 @@ export class Game {
     this.timers = this.timers.filter((item) => this.t < item.at);
     if (this.t >= this.nextVisitor) {
       this.spawnVisitor();
-      this.nextVisitor = this.t + random(3.2, 5.4) * (this.t > 120 ? 0.85 : 1);
+      const rush = (this.t > 120 ? 0.85 : 1) / (1 + 0.07 * (this.day - 1));
+      this.nextVisitor = this.t + random(3.2, 5.4) * rush;
     }
     for (const visitor of [...this.visitors]) {
       if (visitor.engaged) continue;
@@ -441,9 +465,12 @@ export class Game {
       return;
     }
     const [topic, question] = pick(this.questions);
+    const vip = this.t > 15 && Math.random() < 0.14;
+    const patience = vip ? PATIENCE * 0.6 : PATIENCE;
     this.visitors.push({
-      id: this.nextId++, kind: pick(VISITOR_KINDS), topic, question,
-      patience: PATIENCE, state: "waiting", engaged: false, gone: false, arrivedAt: this.t,
+      id: this.nextId++, kind: pick(VISITOR_KINDS), topic, question, vip,
+      patience, maxPatience: patience, state: "waiting", engaged: false, gone: false,
+      arrivedAt: this.t,
     });
   }
 
@@ -463,6 +490,7 @@ export class Game {
       blame = "01";
     }
     this.lost += 1;
+    this.combo = 0;
     this.hurt(blame, 6);
     const why = visitor.state === "asking" ? "waited for an answer too long" : "waited in line too long";
     this.log(`A visitor ${why} and left angry.`, "bad", blame);
@@ -520,7 +548,11 @@ export class Game {
         return;
       }
       this.askedTopics.add(visitor.topic);
-      this.earn(result.provider === "parrot" ? 4 : 6, { visitor: visitor.id });
+      this.combo += 1;
+      const bonus = this.comboLevel();
+      const base = (result.provider === "parrot" ? 4 : 6) * (visitor.vip ? 3 : 1);
+      this.earn(base + (bonus - 1) * 2, { visitor: visitor.id });
+      if (bonus > 1 && this.combo % 3 === 0) this.fx("combo", { level: bonus });
       this.rep += 2;
       this.served += 1;
       this.fx("happy", { visitor: visitor.id });
@@ -535,6 +567,7 @@ export class Game {
     this.speech = { text: reason, state: "error" };
     if (visitor.gone) return;
     this.lost += 1;
+    this.combo = 0;
     this.hurt(blame, 6);
     this.log(`${reason} The visitor left angry.`, "bad", blame);
     this.removeVisitor(visitor, false);
@@ -669,7 +702,7 @@ export class Game {
 
   pigeons() {
     const blocked = this.online("02");
-    this.pigeonsEvent = { at: this.t, blocked };
+    this.pigeonsEvent = { at: this.t, blocked, left: 10 };
     if (blocked) {
       const admitted = this.systems["02"]?.metrics?.["pigeons admitted"] ?? "a few";
       this.earn(-1, "kiosk");
@@ -698,7 +731,7 @@ export class Game {
 
   raccoon() {
     const blocked = this.online("09");
-    this.raccoonEvent = { at: this.t, blocked };
+    this.raccoonEvent = { at: this.t, blocked, scares: 0, fledAt: null };
     if (blocked) {
       this.after(2.2, () => {
         this.earn(5, "chest");
@@ -710,12 +743,14 @@ export class Game {
         "Security bonus: 5 coins.", "good", "09");
     } else {
       const stolen = Math.max(0, Math.floor(this.coins * 0.3));
+      this.emit("09", false, "No auth check: a raccoon got in. Click it!");
       this.after(4.2, () => {
+        if (this.raccoonEvent.fledAt !== null) return;
         this.earn(-stolen, "chest");
-        this.emit("09", false, `No auth check: the raccoon takes ${stolen} coins`);
+        this.hurt("09", 5);
+        this.sfx("bad");
+        this.log(`A raccoon walked in with a forged badge and stole ${stolen} coins.`, "bad", "09");
       });
-      this.hurt("09", 5);
-      this.log(`A raccoon walked in with a forged badge and stole ${stolen} coins.`, "bad", "09");
     }
   }
 
@@ -756,6 +791,60 @@ export class Game {
       this.log(`Closing time: the kiosk stopped dead, ${waiting.length} visitors dropped.`,
         "bad", "10");
     }
+  }
+
+  /* Doing the job of a sleeping keeper by hand */
+
+  shooPigeon() {
+    const swarm = this.pigeonsEvent;
+    if (this.state !== "running" || !swarm || swarm.blocked || swarm.left <= 0) return;
+    swarm.left -= 1;
+    this.sfx("pop");
+    if (swarm.left === 0 && this.t < this.jammedUntil) {
+      this.jammedUntil = this.t;
+      this.earn(2, "kiosk");
+      this.log("You chased the whole swarm away by hand. A rate limiter does that without you.",
+        "good", "02");
+    }
+  }
+
+  scareRaccoon() {
+    const event = this.raccoonEvent;
+    if (this.state !== "running" || !event || event.blocked || event.fledAt !== null
+      || this.t - event.at > 4.2) return;
+    event.scares += 1;
+    this.sfx("bark");
+    if (event.scares >= 3) {
+      event.fledAt = this.t;
+      this.earn(2, "chest");
+      this.log("You scared the raccoon off yourself. An auth check stops it at the door.",
+        "good", "09");
+    }
+  }
+
+  rollback() {
+    if (this.state !== "running" || this.t >= this.brokenReleaseUntil) return;
+    this.brokenReleaseUntil = this.t;
+    this.sfx("good");
+    this.log("You rolled the kiosk back to v1 by hand. A canary release does it in seconds.",
+      "good", "10");
+  }
+
+  /* Bao's job list */
+
+  /** Ask Bao to walk to a place and do something there. A few jobs can wait in line. */
+  enqueue(key, point, run, { valid = () => true, ready = () => true } = {}) {
+    if (this.state !== "running" || this.tasks.some((task) => task.key === key)) return;
+    if (this.tasks.length >= MAX_TASKS) {
+      this.say("keeper", "Too many jobs!", 1.2);
+      return;
+    }
+    this.sfx("pop");
+    this.tasks.push({ key, point, run, valid, ready });
+  }
+
+  comboLevel() {
+    return Math.min(4, 1 + Math.floor(this.combo / 3));
   }
 
   /* Helpers */
@@ -830,6 +919,10 @@ export class Game {
         { duration: 220 });
     }
     $("#hud-served").textContent = String(this.served);
+    const combo = $("#hud-combo");
+    combo.hidden = this.comboLevel() < 2;
+    combo.textContent = `Combo x${this.comboLevel()}`;
+    $("#hud-day").textContent = `Day ${this.day}`;
     $("#hud-clock").textContent = this.clock();
     const rep = $("#hud-rep");
     rep.style.width = `${Math.max(0, Math.min(100, this.rep))}%`;
