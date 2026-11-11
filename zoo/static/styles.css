@@ -83,7 +83,7 @@ pre {
 .app {
   max-width: 1560px;
   margin: 0 auto;
-  padding: 8px 18px 24px;
+  padding: 6px 14px 12px;
 }
 
 /* Top bar */
@@ -93,8 +93,8 @@ pre {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 24px;
-  padding: 0 4px 8px;
+  gap: 6px 24px;
+  padding: 0 4px 6px;
 }
 
 .brand {
@@ -245,11 +245,11 @@ button.pattern-chip:hover {
 
 .play {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 264px;
   grid-template-areas:
     "stage journal"
     "dock journal";
-  gap: 14px 16px;
+  gap: 12px 14px;
   align-items: start;
 }
 
@@ -257,7 +257,7 @@ button.pattern-chip:hover {
   grid-area: stage;
   position: relative;
   width: 100%;
-  max-width: max(620px, calc((100vh - 232px) * 16 / 9));
+  max-width: max(620px, calc((100vh - 158px) * 16 / 9));
   margin-inline: auto;
   overflow: hidden;
   background: #8dd67c;
@@ -723,7 +723,7 @@ button.pattern-chip:hover {
   grid-area: journal;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 92px);
+  max-height: calc(100vh - 76px);
   padding: 12px 12px 14px;
   background: var(--cream);
   border: 4px solid var(--ink);
@@ -784,11 +784,12 @@ button.pattern-chip:hover {
 .dock-wrap {
   grid-area: dock;
   width: 100%;
-  max-width: max(620px, calc((100vh - 232px) * 16 / 9));
+  max-width: max(620px, calc((100vh - 158px) * 16 / 9));
   margin-inline: auto;
 }
 
 .dock-title {
+  display: none;
   margin: 0 0 8px 6px;
   font: 700 13px var(--font-display);
   color: var(--muted);
@@ -805,9 +806,11 @@ button.pattern-chip:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  flex-direction: row;
+  justify-content: center;
+  gap: 5px;
   min-width: 0;
-  padding: 9px 2px 4px;
+  padding: 6px 2px 5px 6px;
   font: inherit;
   color: var(--ink);
   text-align: center;
@@ -823,24 +826,26 @@ button.pattern-chip:hover {
   display: grid;
   place-items: center;
   flex: none;
-  width: 46px;
-  height: 46px;
+  width: 32px;
+  height: 32px;
   background: color-mix(in srgb, var(--chip) 28%, #ffffff);
   border: 3px solid var(--chip);
   border-radius: 50%;
 }
 
 .badge-face canvas {
+  width: 100% !important;
+  height: 100% !important;
   border-radius: 50%;
 }
 
 .badge-face b {
   position: absolute;
-  top: -7px;
-  left: -9px;
-  padding: 0 6px;
-  font: 800 11px var(--font-display);
-  line-height: 17px;
+  top: -8px;
+  left: -10px;
+  padding: 0 4px;
+  font: 800 9px var(--font-display);
+  line-height: 13px;
   color: #ffffff;
   background: var(--chip);
   border: 2px solid var(--ink);
@@ -850,14 +855,15 @@ button.pattern-chip:hover {
 .badge-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   min-width: 0;
   max-width: 100%;
 }
 
 .badge-name {
   max-width: 100%;
-  font: 800 clamp(10.5px, 0.92vw, 13.5px) var(--font-display);
+  font: 800 clamp(9.5px, 0.72vw, 12.5px) var(--font-display);
+  line-height: 1.1;
   white-space: nowrap;
 }
 
