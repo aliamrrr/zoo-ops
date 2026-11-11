@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=3">
 </head>
 <body>
   <div class="app">
@@ -74,15 +74,15 @@
           </div>
         </div>
 
-        <aside class="journal" aria-label="Shift journal">
-          <h2 class="journal-title">Shift journal</h2>
-          <ol class="log" id="log" aria-live="polite"></ol>
-        </aside>
-
         <div class="dock-wrap">
           <p class="dock-title">The ten patterns running your zoo. They light up when they act.</p>
           <div class="dock" id="dock"></div>
         </div>
+
+        <aside class="journal" aria-label="Shift journal">
+          <h2 class="journal-title">Shift journal</h2>
+          <ol class="log" id="log" aria-live="polite"></ol>
+        </aside>
       </section>
 
       <section class="panel" id="panel-stations" role="tabpanel" aria-labelledby="tab-stations" hidden>
@@ -127,6 +127,6 @@
     </div>
   </aside>
 
-  <script src="/static/js/main.js" type="module"></script>
+  <script src="/static/js/main.js?v=3" type="module"></script>
 </body>
 </html>
