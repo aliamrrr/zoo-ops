@@ -1,0 +1,7 @@
+node_modules/
+# Render output is ignored, except the two finished films.
+out/*
+!out/zoo-ops.mp4
+!out/zoo-ops-film2.mp4
+# Captured gameplay frames (about 230 MB). Regenerate with capture-game.mjs.
+assets/game/

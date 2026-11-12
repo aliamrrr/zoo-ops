@@ -1,0 +1,12 @@
+{
+  "name": "zoo-ops-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs",
+    "preview": "node render.mjs --serve"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.0.0"
+  }
+}

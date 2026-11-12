@@ -1,0 +1,134 @@
+/* Zoo Ops motion identity. Tokens are documented in video/BRAND.md. */
+@font-face { font-family: "Baloo 2"; font-weight: 700; src: url("../assets/fonts/baloo-2-700.woff2") format("woff2"); }
+@font-face { font-family: "Baloo 2"; font-weight: 800; src: url("../assets/fonts/baloo-2-800.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 600; src: url("../assets/fonts/nunito-600.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 800; src: url("../assets/fonts/nunito-800.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; src: url("../assets/fonts/jetbrains-mono-500.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; src: url("../assets/fonts/jetbrains-mono-700.woff2") format("woff2"); }
+
+:root {
+  --ink: #4b3757;
+  --muted: #7d6c8c;
+  --faint: #b9aec4;
+  --paper: #fff8e8;
+  --card: #ffffff;
+  --green: #58c96c;
+  --green-dark: #3a9a50;
+  --pink: #ff8fab;
+  --red: #e5484d;
+  --yellow: #ffc93c;
+  --sky: #c9ecff;
+  --shadow: rgb(75 55 87 / 22%);
+  --display: "Baloo 2", sans-serif;
+  --body: "Nunito", sans-serif;
+  --mono: "JetBrains Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #2b2233; overflow: hidden; }
+
+#stage {
+  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden;
+  transform-origin: 0 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(rgb(75 55 87 / 13%) 2.2px, transparent 2.6px);
+  background-size: 36px 36px;
+  color: var(--ink); font-family: var(--display); font-weight: 700;
+}
+#hud { position: fixed; left: 12px; bottom: 8px; color: #fff; font: 14px var(--mono); opacity: .8; }
+
+.scene { position: absolute; inset: 0; will-change: transform, opacity, filter; }
+.scene > *, .abs { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform, opacity; }
+
+/* Type */
+.h-xl { font-size: 168px; font-weight: 800; line-height: 1; }
+.h-lg { font-size: 150px; font-weight: 800; line-height: 1; }
+.h-md { font-size: 96px; font-weight: 700; line-height: 1; }
+.h-sm { font-size: 84px; font-weight: 800; line-height: 1; }
+.h-xs { font-size: 60px; font-weight: 800; line-height: 1; }
+.label { font-family: var(--body); font-weight: 800; font-size: 30px; color: var(--muted); }
+.mono { font-family: var(--mono); font-weight: 500; }
+
+/* Sticker surfaces: thick ink outline + hard drop shadow, never a blurred one. */
+.pill {
+  display: inline-flex; align-items: center; gap: 14px;
+  padding: 8px 28px 6px; border-radius: 999px;
+  background: var(--card); border: 4px solid var(--ink); box-shadow: 0 7px 0 var(--shadow);
+  font-size: 34px; font-weight: 700; line-height: 1.3;
+}
+.pill.sm { font-size: 26px; padding: 4px 20px 3px; border-width: 3px; box-shadow: 0 5px 0 var(--shadow); }
+.pill.bad { background: #ffe9ea; color: #b4232b; border-color: #b4232b; }
+.pill.good { background: #e3f8e6; color: #23753a; border-color: #23753a; }
+.pill.dark { background: var(--ink); color: #fff; }
+.pill .num { display: inline-block; background: var(--chip, var(--ink)); color: #fff; border-radius: 999px; padding: 0 16px; margin-left: -14px; font-weight: 800; }
+.card { background: var(--card); border: 5px solid var(--ink); border-radius: 30px; box-shadow: 0 10px 0 var(--shadow); }
+
+/* Keeper cursor: chunky arrow + name tag in the keeper's color. */
+.cursor { width: 0; height: 0; }
+.cursor svg { position: absolute; left: -6px; top: -4px; width: 44px; height: 44px; overflow: visible; }
+.cursor .tag {
+  position: absolute; left: 30px; top: 30px; padding: 0 16px 0 6px; border-radius: 999px;
+  background: var(--chip); color: #fff; border: 3px solid var(--ink);
+  font-size: 24px; font-weight: 800; line-height: 40px; display: flex; align-items: center; gap: 6px;
+}
+.cursor .tag canvas { width: 34px; height: 34px; background: #fff; border-radius: 50%; }
+
+.caret { position: absolute; width: 12px; border-radius: 6px; background: var(--chip, var(--pink)); }
+
+/* Selection box used when a keeper "drags" a line of type into place. */
+.sel { border: 4px dashed var(--chip); border-radius: 14px; }
+.sel i { position: absolute; width: 16px; height: 16px; background: #fff; border: 4px solid var(--chip); border-radius: 4px; }
+.sel i:nth-child(1) { left: -10px; top: -10px; } .sel i:nth-child(2) { right: -10px; top: -10px; }
+.sel i:nth-child(3) { left: -10px; bottom: -10px; } .sel i:nth-child(4) { right: -10px; bottom: -10px; }
+
+/* Game window */
+.window { border: 6px solid var(--ink); border-radius: 34px; box-shadow: 0 14px 0 var(--shadow); overflow: hidden; background: #cfeeb6; }
+.window img { position: absolute; display: block; max-width: none; }
+.ring { border: 7px dashed var(--yellow); border-radius: 50%; box-shadow: 0 0 0 5px var(--ink) inset, 0 0 0 5px var(--ink); }
+
+/* Editor */
+.editor { width: 980px; height: 700px; overflow: hidden; }
+.editor .bar { height: 68px; border-bottom: 4px solid var(--ink); background: #f6efe0; display: flex; align-items: center; gap: 14px; padding: 0 26px; font: 500 23px var(--mono); }
+.editor .bar b { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--ink); background: var(--pink); }
+.editor .bar b:nth-child(2) { background: var(--yellow); } .editor .bar b:nth-child(3) { background: var(--green); margin-right: 14px; }
+.editor .bar img { width: 28px; height: 28px; }
+.code { position: absolute; left: 0; top: 68px; right: 0; padding: 30px 30px 0 0; font: 500 27px/45px var(--mono); white-space: pre; counter-reset: ln; }
+.code .ln { display: block; height: 45px; padding-left: 78px; position: relative; }
+.code .ln::before { counter-increment: ln; content: counter(ln); position: absolute; left: 0; width: 52px; text-align: right; color: var(--faint); }
+.code .ln.cur { background: #fff3cf; }
+.code .kw { color: #7a62d9; font-weight: 700; } .code .self { color: #d9538a; } .code .fn { color: #2f8fd6; }
+.code .cm { color: #a294b0; } .code .nb { color: #d9822b; }
+.code .todo { background: linear-gradient(#ffe08a, #ffe08a) no-repeat; color: #8a6a1f; }
+.code .c { display: inline-block; width: 4px; height: 30px; margin: 0 -2px; vertical-align: -6px; background: var(--ink); border-radius: 2px; }
+.term { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: var(--ink); color: #fff; font: 500 26px var(--mono); display: flex; align-items: center; padding: 0 30px; gap: 22px; }
+.term .ok { background: var(--green); color: #173d20; border-radius: 10px; padding: 2px 16px; font-weight: 700; }
+
+.disk { border-radius: 50%; background: #ffe6c2; border: 5px solid var(--ink); }
+.tape { height: 44px; border: 4px solid var(--ink); border-radius: 8px; background: repeating-linear-gradient(-45deg, var(--yellow) 0 26px, var(--ink) 26px 52px); box-shadow: 0 6px 0 var(--shadow); }
+.coin { width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #ffe08a 0 42%, var(--yellow) 44%); border: 4px solid #b8791a; }
+.burst { border-radius: 50%; border: 10px solid var(--yellow); }
+.strike { position: relative; color: var(--muted); }
+.strike::after { content: ""; position: absolute; left: -4px; right: -4px; top: 46%; height: 5px; background: var(--red); border-radius: 3px; transform: rotate(-8deg); }
+
+/* Architecture */
+.node { width: 190px; height: 190px; display: flex; align-items: center; justify-content: center; }
+.node img { width: 104px; height: 104px; }
+.node canvas { width: 150px; height: 150px; }
+.node-label { font-size: 32px; font-weight: 800; text-align: center; line-height: 1.05; }
+.node-label small { display: block; font: 800 24px var(--body); color: var(--muted); margin-top: 4px; }
+.dot { width: 30px; height: 30px; border-radius: 50%; border: 4px solid var(--ink); }
+.slot { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--ink); }
+.big { font-size: 230px; font-weight: 800; line-height: .9; }
+.bar-track { width: 540px; height: 34px; }
+.bar-fill { height: 34px; border-radius: 999px; border: 4px solid var(--ink); }
+svg.wires { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: visible; }
+svg.wires line { stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 2 16; }
+
+/* Pattern grid */
+.badge { width: 320px; height: 150px; border-radius: 28px; display: flex; align-items: center; gap: 12px; padding: 0 14px; }
+.badge canvas { width: 92px; height: 92px; border-radius: 50%; flex: none; }
+.badge .n { font: 800 22px var(--mono); }
+.badge .t { font-size: 31px; font-weight: 800; line-height: 1; }
+.swap { display: inline-block; position: relative; height: 104px; vertical-align: middle; border-radius: 22px; border: 5px solid var(--ink); box-shadow: 0 8px 0 var(--shadow); overflow: hidden; }
+.swap span { position: absolute; left: 0; top: 0; padding: 0 26px; line-height: 100px; color: #fff; }
+.wordmark span { display: inline-block; }
