@@ -248,3 +248,61 @@ class GameBackend:
         outcome.failed = True
         add_note(outcome.notes, f"{what}: {type(exc).__name__}: {exc}")
         return outcome
+
+
+class SimulatedBackend:
+    """The live hooks of a hard mode. The learner's project is a real service checked by its
+    acceptance tests, so the game plays the behavior of each ticket that passes them."""
+
+    BREAKER_THRESHOLD = 2
+
+    def __init__(self) -> None:
+        self._rng = random.Random()
+        self.online: frozenset[str] = frozenset()
+        self.reset()
+
+    async def run(self, function: Callable[..., T], *args: Any) -> T:
+        return function(*args)
+
+    def reset(self) -> None:
+        self._answers: dict[str, str] = {}
+        self._storm_failures = 0
+
+    def ask(self, question: str, storm: bool) -> AskOutcome:
+        outcome = AskOutcome()
+        key = " ".join(question.lower().split())
+        if "01" not in self.online:
+            add_note(outcome.notes, "no cache: every question goes to a model")
+        elif key in self._answers:
+            outcome.provider, outcome.cache_hit = "cache", True
+            outcome.answer, outcome.sim_seconds = self._answers[key], 0.05
+            return outcome
+
+        if not storm:
+            self._storm_failures = 0
+            outcome.provider, outcome.cost, outcome.sim_seconds = "owl", OWL_COST, OWL_SECONDS
+            outcome.answer = owl.answer_for(question)
+        elif "03" in self.online:
+            breaker_open = self._storm_failures >= self.BREAKER_THRESHOLD
+            self._storm_failures += 1
+            outcome.provider, outcome.cost = "parrot", PARROT_COST
+            outcome.sim_seconds = PARROT_SECONDS if breaker_open else 1.0 + PARROT_SECONDS
+            outcome.answer = "Squawk! " + owl.answer_for(question).split("\n", 1)[0]
+        else:
+            add_note(outcome.notes, "no retry or fallback: one long call to the Owl")
+            outcome.failed, outcome.sim_seconds = True, NAIVE_TIMEOUT
+            add_note(outcome.notes, "the Owl never answered: the bridge is flooded")
+            return outcome
+
+        if "01" in self.online and outcome.provider == "owl":
+            self._answers[key] = outcome.answer
+        return outcome
+
+    def feed(self, animal: str) -> FeedOutcome:
+        outcome = FeedOutcome(attempts=self._rng.choice([1, 2, 2, 3, 3]))
+        if "04" in self.online:
+            outcome.delivered_grams, outcome.replays = MEAL_GRAMS, outcome.attempts - 1
+        else:
+            add_note(outcome.notes, "no Idempotency-Key: every retry runs the order again")
+            outcome.delivered_grams = MEAL_GRAMS * outcome.attempts
+        return outcome

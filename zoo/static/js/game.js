@@ -1,5 +1,6 @@
 import { api } from "./api.js";
 import { critterCanvas } from "./art.js";
+import { CLASSIC, scopedKey } from "./mode.js";
 import { SYSTEMS, SYSTEM_IDS } from "./systems.js";
 
 export const SHIFT_SECONDS = 180;
@@ -74,35 +75,19 @@ function nearestRank(values, p) {
   return sorted[Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)];
 }
 
-function readDay() {
+function readNumber(key, fallback) {
   try {
-    return Math.max(1, Number(localStorage.getItem(DAY_KEY)) || 1);
+    return Number(localStorage.getItem(key)) || fallback;
   } catch {
-    return 1;
+    return fallback;
   }
 }
 
-function writeDay(day) {
+function writeNumber(key, value) {
   try {
-    localStorage.setItem(DAY_KEY, String(day));
+    localStorage.setItem(key, String(value));
   } catch {
-    /* private mode: every visit starts at day one */
-  }
-}
-
-function readBest() {
-  try {
-    return Number(localStorage.getItem(BEST_KEY)) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function writeBest(score) {
-  try {
-    localStorage.setItem(BEST_KEY, String(score));
-  } catch {
-    /* private mode: the best score is simply not remembered */
+    /* private mode: progress is simply not remembered */
   }
 }
 
@@ -112,8 +97,13 @@ function writeBest(score) {
  * A "moment" event is a pattern doing (or failing to do) its job at a place in the zoo.
  */
 export class Game {
-  constructor({ questions, onOpenStation, onMoment, onShiftStart }) {
+  constructor({ questions, mode, modes, onSwitchMode, onOpenStation, onMoment, onShiftStart }) {
     this.questions = Object.entries(questions);
+    this.mode = mode;
+    this.modes = modes;
+    this.onSwitchMode = onSwitchMode;
+    this.dayKey = scopedKey(DAY_KEY, mode.key);
+    this.bestKey = scopedKey(BEST_KEY, mode.key);
     this.onOpenStation = onOpenStation;
     this.onMoment = onMoment;
     this.onShiftStart = onShiftStart;
@@ -191,7 +181,7 @@ export class Game {
     this.events = [];
     this.tasks = [];
     this.combo = 0;
-    this.day = readDay();
+    this.day = this.readDay();
     this.timers = [];
     this.cooldowns = {};
     this.stats = Object.fromEntries(SYSTEM_IDS.map((id) => [id, { good: 0, bad: 0 }]));
@@ -266,9 +256,9 @@ export class Game {
     this.state = "over";
     const score = Math.max(0, Math.round(this.coins)) + Math.round(this.rep) * 3 + this.served * 2;
     const stars = STAR_SCORES.filter((needed) => score >= needed).length;
-    const best = readBest();
-    if (score > best) writeBest(score);
-    if (won) writeDay(this.day + 1);
+    const best = readNumber(this.bestKey, 0);
+    if (score > best) writeNumber(this.bestKey, score);
+    if (won) writeNumber(this.dayKey, this.day + 1);
     this.sfx(won ? "win" : "lose");
     if (won) this.fx("confetti");
 
@@ -297,8 +287,38 @@ export class Game {
       "button-primary"]]);
   }
 
+  readDay() {
+    return Math.max(1, readNumber(this.dayKey, 1));
+  }
+
   stat(label, value) {
     return el("div", {}, [el("dt", { text: label }), el("dd", { text: String(value) })]);
+  }
+
+  modePicker() {
+    return el("div", { class: "modes", role: "radiogroup", "aria-label": "Difficulty" },
+      this.modes.map((mode) => {
+        const active = mode.key === this.mode.key;
+        const card = el("button", {
+          class: "mode-card", type: "button", role: "radio", "data-mode": mode.key,
+          "aria-checked": String(active),
+        }, [
+          el("span", { class: "mode-title", text: mode.title }),
+          el("span", { class: "mode-tagline", text: mode.tagline }),
+        ]);
+        if (!active) card.addEventListener("click", () => this.onSwitchMode(mode.key));
+        return card;
+      }));
+  }
+
+  systemsLine(known) {
+    if (!known) return "Running the morning backend check...";
+    const checking = SYSTEM_IDS.filter((id) => this.systems[id]?.status === "checking").length;
+    if (checking) return "Running the acceptance tests of every ticket...";
+    const built = `${this.onlineCount()} of 10 backend patterns`;
+    return this.mode.key === CLASSIC
+      ? `${built} built. Each one you code wakes up a keeper.`
+      : `${built} in production. A ticket ships when its tests pass and its block is on the Blueprint.`;
   }
 
   showIntro() {
@@ -310,8 +330,8 @@ export class Game {
         title: `${id} ${SYSTEMS[id].label}` })));
     this.overlay([
       cast,
-      el("h1", { class: "logo", text: "Zoo Ops" }),
-      el("p", { class: "tagline", text: `Day ${readDay()}. You are Bao, the panda keeper.` }),
+      el("h1", { class: "logo", text: this.mode.title }),
+      el("p", { class: "tagline", text: `Day ${this.readDay()}. You are Bao, the panda keeper.` }),
       el("ul", { class: "howto" }, [
         el("li", { text: "Click a visitor, an animal, dirt or the pink cottage: Bao walks there and does the job. Plan his route!" }),
         el("li", { text: "Serve visitors in a row to build a combo. Golden VIPs pay triple but hate waiting." }),
@@ -319,10 +339,9 @@ export class Game {
       ]),
       el("div", { class: "systems-line" }, [
         dots,
-        el("span", { text: known
-          ? `${this.onlineCount()} of 10 backend patterns built. Each one you code wakes up a keeper.`
-          : "Running the morning backend check..." }),
+        el("span", { text: this.systemsLine(known) }),
       ]),
+      this.modePicker(),
     ], [["Open the gates", () => this.start(), "button-primary button-big"]], !known);
   }
 

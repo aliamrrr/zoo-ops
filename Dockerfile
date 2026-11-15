@@ -13,6 +13,9 @@ RUN pip install -r requirements.txt
 
 COPY zoo ./zoo
 COPY levels ./levels
+COPY hard ./hard
+COPY hardpp ./hardpp
+RUN mkdir .zoo && chown zoo .zoo
 
 USER zoo
 EXPOSE 8000

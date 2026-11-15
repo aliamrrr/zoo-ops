@@ -40,7 +40,8 @@ export class Dock {
       const built = systems[id]?.status === "healthy";
       const broken = systems[id]?.status === "broken";
       badge.node.dataset.built = String(built);
-      badge.state.textContent = built ? "on duty" : broken ? "buggy" : "asleep";
+      const testing = systems[id]?.status === "checking";
+      badge.state.textContent = built ? "on duty" : broken ? "buggy" : testing ? "testing" : "asleep";
       badge.effect.textContent = built ? SYSTEMS[id].with : SYSTEMS[id].without;
       paintCritterCanvas(badge.face, SYSTEMS[id].keeper, { face: true, eyes: built ? "open" : "asleep" });
     }

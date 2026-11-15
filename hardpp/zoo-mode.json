@@ -1,0 +1,29 @@
+{
+  "key": "hardpp",
+  "title": "Zoo Ops [Hard++]",
+  "tagline": "Interview-grade distributed systems. The planet is on fire.",
+  "project": "src/zoo_planet",
+  "tests": "tests",
+  "levels": [
+    {"id": "01", "label": "Stampede", "pattern": "Singleflight + stale-while-revalidate + consistent hashing", "ticket": "tickets/01-viral-question.md", "test": "tests/acceptance/test_hpp_01_stampede.py", "title": "PLANET-201 The viral question",
+     "without": "A hot answer expires and the whole crowd hits the model at once.", "with": "One refresh per hot key, the crowd gets the stale answer meanwhile."},
+    {"id": "02", "label": "Global limit", "pattern": "Distributed rate limiting (GCRA)", "ticket": "tickets/02-global-limit.md", "test": "tests/acceptance/test_hpp_02_global_limit.py", "title": "PLANET-202 One limit for the whole planet",
+     "without": "Each region counts alone, so the swarm gets three budgets.", "with": "One smooth budget per caller across every region."},
+    {"id": "03", "label": "Tail latency", "pattern": "Hedged requests + load shedding", "ticket": "tickets/03-long-tail.md", "test": "tests/acceptance/test_hpp_03_tail_latency.py", "title": "PLANET-203 The long tail",
+     "without": "One busy replica makes every visitor wait.", "with": "Late calls are hedged, replicas are capped, low priority is shed."},
+    {"id": "04", "label": "Exactly once", "pattern": "Transactional outbox + idempotent consumer", "ticket": "tickets/04-billed-twice-or-never.md", "test": "tests/acceptance/test_hpp_04_exactly_once.py", "title": "PLANET-204 Billed twice, or never",
+     "without": "A crash loses the event or charges the family twice.", "with": "Every order is billed exactly once, whatever crashes."},
+    {"id": "05", "label": "Tracing", "pattern": "Trace propagation + tail-based sampling", "ticket": "tickets/05-trace-stops-at-the-queue.md", "test": "tests/acceptance/test_hpp_05_tracing.py", "title": "PLANET-205 The trace that stops at the queue",
+     "without": "Traces stop at the queue and the slow ones are thrown away.", "with": "One trace end to end, and every slow or failing one is kept."},
+    {"id": "06", "label": "Sharding", "pattern": "Consistent-hash sharding + online rebalance", "ticket": "tickets/06-registry-outgrew-a-shard.md", "test": "tests/acceptance/test_hpp_06_sharding.py", "title": "PLANET-206 The registry outgrew its shards",
+     "without": "Adding a shard moves almost everything and reads fail.", "with": "A fifth shard joins online and pages read a handful of rows."},
+    {"id": "07", "label": "Saga", "pattern": "Orchestrated saga with compensations", "ticket": "tickets/07-half-finished-adoption.md", "test": "tests/acceptance/test_hpp_07_saga.py", "title": "PLANET-207 The half-finished adoption",
+     "without": "A refused van leaves a reserved kitten and a charged family.", "with": "Failed adoptions are undone step by step, even after a crash."},
+    {"id": "08", "label": "Partitions", "pattern": "Partitioned log + consumer groups", "ticket": "tickets/08-events-out-of-order.md", "test": "tests/acceptance/test_hpp_08_partitions.py", "title": "PLANET-208 Events out of order",
+     "without": "Events arrive out of order and a crash loses some.", "with": "Ordered per animal, balanced consumers, nothing lost."},
+    {"id": "09", "label": "Geo index", "pattern": "Geospatial index + nearest neighbours", "ticket": "tickets/09-dispatch.md", "test": "tests/acceptance/test_hpp_09_geo.py", "title": "PLANET-209 Dispatching keepers across the city",
+     "without": "Each escape scans twenty thousand keepers.", "with": "The closest keepers are found from a few nearby cells."},
+    {"id": "10", "label": "Leader", "pattern": "Leader election + fencing tokens", "ticket": "tickets/10-two-night-watchmen.md", "test": "tests/acceptance/test_hpp_10_leader.py", "title": "PLANET-210 Two night watchmen",
+     "without": "Three schedulers feed the animals three times.", "with": "One leader feeds, a woken zombie is fenced off."}
+  ]
+}

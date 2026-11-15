@@ -14,6 +14,9 @@ from rich.padding import Padding
 from rich.table import Table
 from rich.text import Text
 
+from zoo.blueprint import Blueprint
+from zoo.checks import LevelReport, run_levels
+from zoo.modes import Mode, ModeLevel
 from zoo.registry import LEVELS, ROOT, Level
 from zoo.sprites import gradient_strip, palette, sprite_text
 
@@ -183,7 +186,9 @@ def render_level(level: Level, results: list[TestResult], verbose: bool) -> Tabl
     return grid
 
 
-def render_scoreboard(console: Console, statuses: list[LevelStatus], total: int) -> None:
+def render_scoreboard(
+    console: Console, statuses: list[LevelStatus], total: int, play: str = "python -m zoo play"
+) -> None:
     online = statuses.count("healthy")
     colors = {"healthy": GREEN, "broken": RED, "todo": AMBER}
     squares = Text(no_wrap=True)
@@ -193,8 +198,7 @@ def render_scoreboard(console: Console, statuses: list[LevelStatus], total: int)
     message = (
         "Every station is online. The zoo runs itself. Ship it."
         if online == total
-        else "Fix a station, then run the bench again. The game shows what breaks: "
-        "python -m zoo play"
+        else f"Fix a station, then run the bench again. The game shows what breaks: {play}"
     )
     console.print(
         Padding(
@@ -205,6 +209,78 @@ def render_scoreboard(console: Console, statuses: list[LevelStatus], total: int)
         )
     )
     console.print(Padding(Text(message, style="grey62"), (0, 2)))
+
+
+def render_ticket(
+    mode: Mode, level: ModeLevel, report: LevelReport, placed: bool, verbose: bool
+) -> Table:
+    label, label_style = STATUS_LABELS[report.status]
+    title = Text.assemble(
+        (f"{level.id} ", "bold grey50"),
+        (level.pattern.upper(), "bold"),
+        ("   ", ""),
+        (label, label_style),
+    )
+    subtitle = Text(f"{level.title}  /  {mode.root.name}/{level.ticket}", style="grey50")
+    lines: list[Text] = [title, subtitle, progress_bar(report.passed, report.total)]
+    failures = [result for result in report.results if result.outcome != "pass"]
+    shown = report.results if verbose else failures[:3]
+    for result in shown:
+        lines.append(badge_line("pass" if result.outcome == "pass" else "fail", result.name))
+        if result.message:
+            lines.append(message_line(result.message))
+    if not verbose and len(failures) > 3:
+        lines.append(
+            message_line(
+                f"... {len(failures) - 3} more, run: python -m zoo test --mode {mode.key} "
+                f"{level.number} -v"
+            )
+        )
+    if not placed:
+        lines.append(
+            badge_line(
+                "todo",
+                "blueprint",
+                f"place block {level.id} first: python -m zoo play "
+                f"--mode {mode.key}, Blueprint tab",
+            )
+        )
+    grid = Table.grid(padding=(0, 3))
+    grid.add_column(width=12, no_wrap=True)
+    grid.add_column(ratio=1)
+    grid.add_row(sprite_text(LEVELS[level.number - 1].animal), Group(*lines))
+    return grid
+
+
+def hard_bench(mode: Mode, levels: list[ModeLevel], verbose: bool) -> int:
+    console = Console(highlight=False)
+    width = min(console.width, 100)
+    console.print(gradient_strip(width))
+    console.print(
+        Padding(
+            Text.assemble((mode.title.upper(), "bold"), ("  acceptance tests", "grey50")), (0, 2)
+        )
+    )
+    console.print()
+
+    with console.status("[grey62]Running the acceptance tests...", spinner="dots"):
+        reports = run_levels(mode, levels)
+    checks = Blueprint(mode).progress()["checks"]
+
+    statuses: list[LevelStatus] = []
+    for level in levels:
+        report = reports[level.id]
+        statuses.append(report.status)
+        placed = checks[level.id]["verdict"] == "correct"  # type: ignore[index]
+        console.print(
+            Padding(render_ticket(mode, level, report, placed, verbose or len(levels) == 1), (0, 2))
+        )
+        console.print()
+
+    if len(levels) == len(mode.levels):
+        render_scoreboard(console, statuses, len(levels), f"python -m zoo play --mode {mode.key}")
+    console.print(gradient_strip(width))
+    return 0 if all(status == "healthy" for status in statuses) else 1
 
 
 def bench(levels: list[Level], verbose: bool) -> int:

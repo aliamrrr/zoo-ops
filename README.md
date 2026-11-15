@@ -9,7 +9,7 @@ You write the missing backend code. The animals show you, live, what your code c
 [![CI](https://github.com/aliamrrr/zoo-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/aliamrrr/zoo-ops/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-game%20server-009688?logo=fastapi&logoColor=white)
-![Levels](https://img.shields.io/badge/levels-10-7a62d9)
+![Levels](https://img.shields.io/badge/levels-10%20%C3%97%203%20modes-7a62d9)
 ![License](https://img.shields.io/badge/license-MIT-58c96c)
 
 ![The zoo with eight systems built](docs/zoo-built.png)
@@ -56,6 +56,41 @@ python -m zoo play
 ```
 
 The game opens on http://127.0.0.1:8000. Play one shift first, see everything go wrong, then start building.
+
+## Three ways to play
+
+| Mode | Command | What you get |
+| --- | --- | --- |
+| **Zoo Ops** (Classic) | `python -m zoo play` | Ten guided levels in [`levels/`](levels). Each pattern is one file with TODOs and a docstring spec. |
+| **Zoo Ops [Hard]** | `python -m zoo play --mode hard` | A real FastAPI service in [`hard/`](hard), with layers, migrations, Redis, jobs and auth. Ten tickets, no TODOs: you find where the code goes. Same ten patterns, at production depth. |
+| **Zoo Ops [Hard++]** | `python -m zoo play --mode hardpp` | A distributed zoo in [`hardpp/`](hardpp), simulated deterministically. Ten interview-grade problems: stampedes, GCRA, hedged requests, outbox, tail sampling, resharding, sagas, partitioned logs, geo search, fencing tokens. |
+
+You can also switch modes on the title screen of the game. Each mode keeps its own progress
+and its own day counter, and `python -m zoo modes` lists them.
+
+### Architecture first: the Blueprint
+
+In the two hard modes, the game has a **Blueprint** tab: the architecture of the project,
+drawn as boxes and arrows, with empty places. Before writing code for a ticket, you drag its
+block (the cache, the limiter, the outbox relay...) to where it belongs and link it to the
+components it talks to. The server checks the design and answers with hints, never with the
+solution. A ticket ships, and its keeper wakes up in the zoo, only when **its acceptance tests
+pass and its block sits in the right place**.
+
+### Hard++, the ten problems
+
+| # | Ticket | Pattern |
+| --- | --- | --- |
+| 01 | The viral question | Singleflight, stale-while-revalidate, consistent hashing with virtual nodes |
+| 02 | One limit for the whole planet | Distributed GCRA over compare-and-set, immune to clock skew |
+| 03 | The long tail | Hedged requests, per-replica concurrency limits, priority load shedding |
+| 04 | Billed twice, or never | Transactional outbox, relay, idempotent consumer |
+| 05 | The trace that stops at the queue | W3C trace context across a queue, tail-based sampling |
+| 06 | The registry outgrew its shards | Consistent-hash sharding, online rebalancing, k-way merge pagination |
+| 07 | The half-finished adoption | Orchestrated saga with compensations and crash recovery |
+| 08 | Events out of order | Keyed partitions, consumer group rebalancing, commit after processing, fencing |
+| 09 | Dispatching keepers across the city | Geospatial grid index, exact k-nearest neighbours |
+| 10 | Two night watchmen | Leases and fencing tokens |
 
 ## How you play
 
@@ -124,6 +159,10 @@ python -m zoo reset 4                          # start level 04 over
 | `python -m zoo test 3 7` | Only levels 3 and 7, listing every test |
 | `python -m zoo scene 4` | Plays the story of level 04 in the terminal |
 | `python -m zoo reset 4` | Restores the level 04 file from the `starter` tag |
+| `python -m zoo modes` | Lists the three modes |
+| `python -m zoo play --mode hard` | The game in Hard mode (`hardpp` for Hard++) |
+| `python -m zoo test --mode hardpp 4 -v` | The acceptance tests of a Hard++ ticket, every test listed |
+| `python -m zoo reset --mode hard --project` | Restores the whole Hard project from the `hard-starter` tag |
 | `pytest` | Plain pytest works too, for your IDE or debugger |
 
 ## How it works
@@ -133,18 +172,29 @@ python -m zoo reset 4                          # start level 04 over
 - **A broken level never breaks the game.** A TODO falls back to the naive behavior the pattern exists to prevent, and even a syntax error only takes down its own part of the zoo.
 
 ```
-levels/      the ten levels (the code you write)
+levels/        Classic: the ten levels (the code you write)
+hard/          Hard: the Zoo Platform service, its tickets, tests and blueprint
+hardpp/        Hard++: the Zoo Planet simulation, its tickets, tests and blueprint
 zoo/
-  game.py    live hooks: the kiosk and the kitchen call your level 01, 03, 04 code
-  server.py  FastAPI: the page, the systems check, answers streamed through your sse_event()
-  static/    the game: world.js draws the zoo, game.js runs the shift, art.js draws the animals
+  game.py      live hooks: Classic runs your level code, the hard modes play what shipped
+  server.py    FastAPI: the page, the systems check, the blueprint, the kiosk stream
+  modes.py     the three modes and their manifests (zoo-mode.json)
+  checks.py    runs a hard mode's acceptance tests in a subprocess, cached by fingerprint
+  blueprint.py checks a blueprint design against answers that never leave the server
+  static/      the game: world.js draws the zoo, game.js runs the shift, blueprint.js the editor
+tests/         tests of the game shell itself
 ```
 
-The tests are red on purpose until you solve the levels, so CI only checks linting, test collection, that the game boots, and the Docker image.
+In the hard modes the game runs the acceptance tests in the background whenever a file of
+the project changes, and caches the results in `.zoo/`.
+
+The level and ticket tests are red on purpose until you solve them, so CI checks linting,
+test collection, the game shell's own tests, the unit tests of the Hard service, that the
+game boots, and the Docker image.
 
 ## Contributing
 
-Ideas, bug reports and pull requests are welcome: a new incident, a new animal, a clearer hint, a translation. Please do not commit level solutions to `main`, the fun is in writing them.
+Ideas, bug reports and pull requests are welcome: a new incident, a new animal, a clearer hint, a translation. Please do not commit level or ticket solutions to `main`, the fun is in writing them.
 
 ## Author
 

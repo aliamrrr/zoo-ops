@@ -1,0 +1,71 @@
+{
+  "title": "Zoo Platform",
+  "intro": "This is how a request travels through the service. Drag each pattern block onto the place where it belongs, then link it to the components it talks to. A block is right when it sits in the right place and talks to exactly the right components.",
+  "width": 1200,
+  "height": 720,
+  "components": [
+    {"id": "visitors", "label": "Visitors' app", "kind": "client", "x": 30, "y": 300},
+    {"id": "tablets", "label": "Keeper tablets", "kind": "client", "x": 30, "y": 150},
+    {"id": "bots", "label": "Feeder bots", "kind": "client", "x": 30, "y": 450},
+    {"id": "edge", "label": "Load balancer", "kind": "edge", "x": 200, "y": 300},
+    {"id": "api", "label": "API routers", "kind": "api", "x": 470, "y": 300},
+    {"id": "owl", "label": "Owl service", "kind": "service", "x": 700, "y": 90},
+    {"id": "kitchen", "label": "Kitchen service", "kind": "service", "x": 700, "y": 210},
+    {"id": "catalog", "label": "Catalog service", "kind": "service", "x": 700, "y": 330},
+    {"id": "adoptions", "label": "Adoptions and pantries", "kind": "service", "x": 700, "y": 450},
+    {"id": "pens", "label": "Pens service", "kind": "service", "x": 700, "y": 570},
+    {"id": "model_owl", "label": "Owl model API", "kind": "external", "x": 1050, "y": 30},
+    {"id": "model_parrot", "label": "Parrot model API", "kind": "external", "x": 1050, "y": 130},
+    {"id": "redis", "label": "Redis", "kind": "store", "x": 1050, "y": 250},
+    {"id": "database", "label": "SQL database", "kind": "store", "x": 1050, "y": 400},
+    {"id": "queue", "label": "Job queue", "kind": "store", "x": 1050, "y": 540},
+    {"id": "crew", "label": "Robot crew API", "kind": "external", "x": 1050, "y": 650},
+    {"id": "logs", "label": "Logs and metrics backend", "kind": "ops", "x": 420, "y": 40},
+    {"id": "kubernetes", "label": "Kubernetes", "kind": "ops", "x": 420, "y": 640}
+  ],
+  "edges": [
+    ["visitors", "edge"], ["tablets", "edge"], ["bots", "edge"], ["edge", "api"],
+    ["api", "owl"], ["api", "kitchen"], ["api", "catalog"], ["api", "adoptions"], ["api", "pens"],
+    ["owl", "model_owl"], ["owl", "database"], ["kitchen", "database"], ["catalog", "database"],
+    ["adoptions", "database"], ["pens", "database"], ["pens", "queue"], ["queue", "crew"],
+    ["kubernetes", "api"]
+  ],
+  "slots": [
+    {"id": "s-edge", "x": 115, "y": 220},
+    {"id": "s-entry-1", "x": 330, "y": 220},
+    {"id": "s-entry-2", "x": 330, "y": 390},
+    {"id": "s-owl-models", "x": 880, "y": 40},
+    {"id": "s-owl-redis", "x": 880, "y": 150},
+    {"id": "s-kitchen-db", "x": 880, "y": 290},
+    {"id": "s-catalog-db", "x": 880, "y": 390},
+    {"id": "s-adoptions-db", "x": 880, "y": 490},
+    {"id": "s-queue", "x": 880, "y": 610},
+    {"id": "s-telemetry", "x": 470, "y": 170},
+    {"id": "s-lifecycle", "x": 600, "y": 640},
+    {"id": "s-db-queue", "x": 1050, "y": 470}
+  ],
+  "blocks": [
+    {"level": "01", "label": "Answer cache", "blurb": "Remembers deterministic answers for every replica."},
+    {"level": "02", "label": "Rate limiter", "blurb": "Two budgets per caller, shared by every replica."},
+    {"level": "03", "label": "Resilient model client", "blurb": "Deadlines, retries with jitter, circuit breakers, backup model."},
+    {"level": "04", "label": "Idempotency store", "blurb": "Remembers request keys and their responses."},
+    {"level": "05", "label": "Telemetry", "blurb": "Request ids, JSON logs, metrics and burn-rate alerts."},
+    {"level": "06", "label": "Connection pool and indexes", "blurb": "Few connections, cheap queries, stable pages."},
+    {"level": "07", "label": "Transactions and versions", "blurb": "All-or-nothing writes and compare-and-set updates."},
+    {"level": "08", "label": "Worker with dead letters", "blurb": "Delayed retries, a dead-letter queue, never blocked."},
+    {"level": "09", "label": "Authentication and tenancy", "blurb": "Verifies tokens and keys, scopes every query."},
+    {"level": "10", "label": "Lifecycle and canary", "blurb": "Readiness, drain, sticky canary and rollback."}
+  ],
+  "answers": {
+    "01": {"slots": ["s-owl-redis"], "links": ["owl", "redis"], "hint": "It sits between the service that pays for answers and the store every replica can read."},
+    "02": {"slots": ["s-entry-2"], "links": ["api", "redis"], "hint": "It needs to know who is calling, so it comes right after the caller is identified, and its counters must be shared."},
+    "03": {"slots": ["s-owl-models"], "links": ["owl", "model_owl", "model_parrot"], "hint": "It wraps every call that leaves for a model, and knows both models."},
+    "04": {"slots": ["s-kitchen-db"], "links": ["kitchen", "database"], "hint": "The keys must survive restarts and be visible to every replica, next to the meals they protect."},
+    "05": {"slots": ["s-telemetry"], "links": ["api", "logs"], "hint": "It wraps every request at the API and ships what it sees to the ops backend."},
+    "06": {"slots": ["s-catalog-db"], "links": ["catalog", "database"], "hint": "The slow pages come from the guide's queries."},
+    "07": {"slots": ["s-adoptions-db"], "links": ["adoptions", "database"], "hint": "Races happen where two writers touch the same row."},
+    "08": {"slots": ["s-queue"], "links": ["queue", "crew"], "hint": "It pulls jobs and calls the robots."},
+    "09": {"slots": ["s-entry-1"], "links": ["api", "database"], "hint": "First thing after the load balancer: nothing else may run for an unknown caller. Bot keys live in a table."},
+    "10": {"slots": ["s-lifecycle"], "links": ["kubernetes", "api"], "hint": "The orchestrator asks it whether to send traffic, and it decides which release serves each caller."}
+  }
+}

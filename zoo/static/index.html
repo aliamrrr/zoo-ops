@@ -9,19 +9,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=4">
+  <link rel="stylesheet" href="/static/styles.css?v=5">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <a class="brand" href="/">
         <span class="brand-face" id="brand-face"></span>
-        <span class="brand-name">Zoo Ops</span>
+        <span class="brand-name" id="brand-name">Zoo Ops</span>
       </a>
       <nav class="tabs" role="tablist" aria-label="Views">
         <button class="tab" role="tab" id="tab-play" aria-controls="panel-play" aria-selected="true" data-tab="play" type="button">Play</button>
         <button class="tab" role="tab" id="tab-stations" aria-controls="panel-stations" aria-selected="false" data-tab="stations" type="button">
           Stations <span class="tab-count" id="stations-count">-/10</span>
+        </button>
+        <button class="tab" role="tab" id="tab-blueprint" aria-controls="panel-blueprint" aria-selected="false" data-tab="blueprint" type="button" hidden>
+          Blueprint <span class="tab-count" id="blueprint-count">-/10</span>
         </button>
       </nav>
     </header>
@@ -92,13 +95,17 @@
       <section class="panel" id="panel-stations" role="tabpanel" aria-labelledby="tab-stations" hidden>
         <div class="stations-intro">
           <p class="eyebrow">Behind the scenes</p>
-          <h1>The ten systems that run the zoo</h1>
-          <p class="lede">
+          <h1 id="stations-title">The ten systems that run the zoo</h1>
+          <p class="lede" id="stations-lede">
             Each system is one system design pattern with a piece of code missing.
             Build it, pass its tests, and its keeper wakes up in the game.
           </p>
         </div>
         <div class="map" id="map"></div>
+      </section>
+
+      <section class="panel" id="panel-blueprint" role="tabpanel" aria-labelledby="tab-blueprint" hidden>
+        <div class="bp" id="blueprint"></div>
       </section>
     </main>
   </div>
@@ -119,18 +126,28 @@
       <p class="drawer-headline" id="drawer-headline"></p>
       <h3>In the game</h3>
       <div class="drawer-game" id="drawer-game"></div>
-      <h3>Scene replay</h3>
-      <ol class="scene-log" id="drawer-log"></ol>
-      <h3>Readings</h3>
-      <dl class="metrics" id="drawer-metrics"></dl>
-      <h3>What you build</h3>
-      <p class="muted">In <code id="drawer-file"></code></p>
-      <ul class="todos" id="drawer-todos"></ul>
-      <pre class="command" id="drawer-command"></pre>
-      <button class="button button-primary" id="drawer-replay" type="button">Replay the scene</button>
+      <div id="drawer-classic">
+        <h3>Scene replay</h3>
+        <ol class="scene-log" id="drawer-log"></ol>
+        <h3>Readings</h3>
+        <dl class="metrics" id="drawer-metrics"></dl>
+        <h3>What you build</h3>
+        <p class="muted">In <code id="drawer-file"></code></p>
+        <ul class="todos" id="drawer-todos"></ul>
+        <pre class="command" id="drawer-command"></pre>
+        <button class="button button-primary" id="drawer-replay" type="button">Replay the scene</button>
+      </div>
+      <div id="drawer-hard" hidden>
+        <div class="gate" id="drawer-gate"></div>
+        <h3>Acceptance tests</h3>
+        <ul class="tests" id="drawer-tests"></ul>
+        <pre class="command" id="drawer-hard-command"></pre>
+        <h3>The ticket</h3>
+        <article class="ticket" id="drawer-ticket"></article>
+      </div>
     </div>
   </aside>
 
-  <script src="/static/js/main.js?v=4" type="module"></script>
+  <script src="/static/js/main.js?v=5" type="module"></script>
 </body>
 </html>

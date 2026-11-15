@@ -15,9 +15,14 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: ruff check .
-      # The level tests are red on purpose until a player solves them,
-      # so CI only checks that every test is collected and that the game boots.
+      # Level and ticket tests are red on purpose until a player solves them,
+      # so CI checks that they are collected, and runs the tests that must stay green.
       - run: pytest --collect-only -q
+      - run: pytest tests -q
+      - name: Hard modes collect, and the Hard service unit tests pass
+        run: |
+          (cd hard && pytest --collect-only -q && pytest tests/unit -q)
+          (cd hardpp && pytest --collect-only -q)
       - name: Boot the game and check its API
         run: |
           python -m uvicorn zoo.server:app --port 8000 &
@@ -27,6 +32,11 @@ jobs:
           done
           curl -fsS http://127.0.0.1:8000/api/game/systems > /dev/null
           curl -fsS -X POST "http://127.0.0.1:8000/api/game/feed?animal=lion" > /dev/null
+          for mode in hard hardpp; do
+            curl -fsS "http://127.0.0.1:8000/api/levels?mode=$mode" > /dev/null
+            curl -fsS "http://127.0.0.1:8000/api/blueprint?mode=$mode" > /dev/null
+            curl -fsS "http://127.0.0.1:8000/api/game/systems?mode=$mode" > /dev/null
+          done
 
   image:
     needs: check

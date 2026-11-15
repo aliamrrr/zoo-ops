@@ -1,0 +1,29 @@
+{
+  "key": "hard",
+  "title": "Zoo Ops [Hard]",
+  "tagline": "A real service, real tickets. Find where the code goes.",
+  "project": "src/zoo_platform",
+  "tests": "tests",
+  "levels": [
+    {"id": "01", "label": "Cache", "pattern": "Cache", "ticket": "tickets/01-owl-bill.md", "test": "tests/acceptance/test_hard_01_cache.py", "title": "ZOO-101 The Owl bill exploded",
+     "without": "Every question is paid again and visitors wait.", "with": "Repeated questions come from the shared cache, instant and free."},
+    {"id": "02", "label": "Rate limit", "pattern": "Rate limiting + API gateway", "ticket": "tickets/02-pigeon-flood.md", "test": "tests/acceptance/test_hard_02_rate_limit.py", "title": "ZOO-102 A pigeon flood took the kiosk down",
+     "without": "The pigeon swarm reaches the Owl, jams the kiosk and runs up the bill.", "with": "Each caller has a shared budget, the swarm is throttled."},
+    {"id": "03", "label": "Reliability", "pattern": "Reliability of external calls", "ticket": "tickets/03-storm-on-the-bridge.md", "test": "tests/acceptance/test_hard_03_reliability.py", "title": "ZOO-103 The storm on the bridge",
+     "without": "During the storm questions hang on the dead Owl, then fail.", "with": "Deadlines, retries, a circuit breaker and the Parrot as backup."},
+    {"id": "04", "label": "Idempotency", "pattern": "Idempotency", "ticket": "tickets/04-double-meals.md", "test": "tests/acceptance/test_hard_04_idempotency.py", "title": "ZOO-104 Animals are fed twice",
+     "without": "Network retries feed an animal two or three times.", "with": "Each order is served once, retries replay the first response."},
+    {"id": "05", "label": "Observability", "pattern": "Observability", "ticket": "tickets/05-flying-blind.md", "test": "tests/acceptance/test_hard_05_observability.py", "title": "ZOO-105 We are flying blind",
+     "without": "No telemetry: bars and forecast hidden, no pager.", "with": "Request ids, p95, burn-rate alerts: you see incidents coming."},
+    {"id": "06", "label": "DB speed", "pattern": "Database performance", "ticket": "tickets/06-slow-guide.md", "test": "tests/acceptance/test_hard_06_database.py", "title": "ZOO-106 The visitor guide is slow",
+     "without": "Every action lags by a second.", "with": "Indexed, cursor-paginated, pooled: actions are instant."},
+    {"id": "07", "label": "Integrity", "pattern": "Data integrity", "ticket": "tickets/07-two-families.md", "test": "tests/acceptance/test_hard_07_integrity.py", "title": "ZOO-107 Two families, one kitten",
+     "without": "Two families leave with the same kitten.", "with": "ETags and transactions: one kitten, one family."},
+    {"id": "08", "label": "Async", "pattern": "Async processing", "ticket": "tickets/08-stuck-crew.md", "test": "tests/acceptance/test_hard_08_async.py", "title": "ZOO-108 The robot crew is stuck",
+     "without": "Silent waits, and you clean every pen by hand.", "with": "The Owl streams, the robots retry later, poison jobs are parked."},
+    {"id": "09", "label": "Auth", "pattern": "Auth + security", "ticket": "tickets/09-raccoon.md", "test": "tests/acceptance/test_hard_09_auth.py", "title": "ZOO-109 A raccoon read our data",
+     "without": "The raccoon walks in with a forged badge and steals coins.", "with": "Signed tokens, hashed keys, tenant isolation."},
+    {"id": "10", "label": "Deploy", "pattern": "Deployment + scaling", "ticket": "tickets/10-release-day.md", "test": "tests/acceptance/test_hard_10_deploy.py", "title": "ZOO-110 Release day",
+     "without": "A bad release breaks the kiosk for everyone.", "with": "Drain on shutdown, sticky canary, automatic rollback."}
+  ]
+}

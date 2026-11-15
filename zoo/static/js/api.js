@@ -1,6 +1,25 @@
+let mode = "classic";
+
+/** Every game call carries the mode being played. */
+export function useMode(key) {
+  mode = key;
+}
+
+function withMode(path) {
+  return `${path}${path.includes("?") ? "&" : "?"}mode=${encodeURIComponent(mode)}`;
+}
+
 async function request(path, options = {}) {
   const response = await fetch(path, options);
-  if (!response.ok) throw new Error(`${path} answered HTTP ${response.status}`);
+  if (!response.ok) {
+    let detail = "";
+    try {
+      detail = (await response.json()).detail || "";
+    } catch {
+      /* not a JSON error body */
+    }
+    throw new Error(detail || `${path} answered HTTP ${response.status}`);
+  }
   return response.json();
 }
 
@@ -15,13 +34,20 @@ async function withRetry(call) {
 }
 
 export const api = {
-  levels: () => withRetry(() => request("/api/levels")),
-  systems: () => withRetry(() => request("/api/game/systems")),
+  modes: () => withRetry(() => request("/api/modes")),
+  levels: () => withRetry(() => request(withMode("/api/levels"))),
+  systems: () => withRetry(() => request(withMode("/api/game/systems"))),
   questions: () => withRetry(() => request("/api/game/questions")),
-  reset: () => withRetry(() => request("/api/game/reset", { method: "POST" })),
+  reset: () => withRetry(() => request(withMode("/api/game/reset"), { method: "POST" })),
   playLevel: (id) => request(`/api/levels/${id}/play`, { method: "POST" }),
   feed: (animal) => withRetry(() =>
-    request(`/api/game/feed?animal=${encodeURIComponent(animal)}`, { method: "POST" })),
+    request(withMode(`/api/game/feed?animal=${encodeURIComponent(animal)}`), { method: "POST" })),
+  blueprint: () => withRetry(() => request(withMode("/api/blueprint"))),
+  checkBlueprint: (placements) => request(withMode("/api/blueprint"), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ placements }),
+  }),
   ask,
 };
 
@@ -46,7 +72,7 @@ function parseEvent(block) {
  * JSON after the whole wait otherwise. Returns the meta data plus how the answer arrived.
  */
 async function ask(question, storm, { onMeta, onToken }) {
-  const url = `/api/game/ask?q=${encodeURIComponent(question)}&storm=${storm}`;
+  const url = withMode(`/api/game/ask?q=${encodeURIComponent(question)}&storm=${storm}`);
   let response;
   try {
     response = await fetch(url);

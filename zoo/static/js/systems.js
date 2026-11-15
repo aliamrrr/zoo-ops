@@ -86,3 +86,16 @@ export const SYSTEMS = {
 };
 
 export const SYSTEM_IDS = Object.keys(SYSTEMS).sort();
+
+/** The hard modes keep each level's keeper and color, and bring their own words. */
+export function applyMode(mode) {
+  if (mode.key === "classic") return;
+  for (const level of mode.levels) {
+    const system = SYSTEMS[level.id];
+    if (!system) continue;
+    system.label = level.label;
+    system.name = level.label;
+    system.without = level.without;
+    system.with = level.with;
+  }
+}
