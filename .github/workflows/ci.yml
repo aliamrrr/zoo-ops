@@ -98,7 +98,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then PY=.venv/Scripts/python.exe; else PY=.venv/bin/python; fi
-          $PY -m zoo play --no-browser --no-reload --port 8000 &
+          $PY -m zoo play classic --no-browser --no-reload --port 8000 &
           for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && break; sleep 1; done
           curl -fsS http://127.0.0.1:8000/ > /dev/null
           for mode in classic hard hardpp; do

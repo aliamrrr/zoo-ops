@@ -48,7 +48,7 @@ def test_the_hard_bench_needs_green_tests_and_a_placed_block(
 def test_play_asks_for_a_mode_and_serves_it(monkeypatch: pytest.MonkeyPatch) -> None:
     served: dict[str, Any] = {}
     monkeypatch.setattr("uvicorn.run", lambda app, **options: served.update(options, app=app))
-    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr(cli, "interactive", lambda: True)
     monkeypatch.setattr("rich.prompt.Prompt.ask", lambda *args, **kwargs: "3")
     monkeypatch.delenv("ZOO_MODE", raising=False)
     monkeypatch.delenv("ZOO_PUBLIC_PORT", raising=False)

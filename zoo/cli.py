@@ -109,6 +109,11 @@ def open_browser(url: str) -> None:
         webbrowser.open(url)
 
 
+def interactive() -> bool:
+    """A person at a terminal, who can answer a question (not CI, not a pipe)."""
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
 def env_flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes"}
 
@@ -127,7 +132,7 @@ def cmd_play(args: argparse.Namespace) -> int:
 
     console = Console(highlight=False)
     key = args.mode_name or args.mode or os.environ.get("ZOO_MODE") or None
-    mode = choose_mode(console) if key is None and sys.stdin.isatty() else find_mode(key or CLASSIC)
+    mode = choose_mode(console) if key is None and interactive() else find_mode(key or CLASSIC)
     port = free_port(args.port)
     # In a container the browser reaches the port Docker publishes, not the one inside.
     shown_port = os.environ.get("ZOO_PUBLIC_PORT") or port
