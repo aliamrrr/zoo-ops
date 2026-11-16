@@ -47,9 +47,8 @@ def format_sse(data: str, event: str | None = None, event_id: str | None = None)
 class ModeRuntime(Protocol):
     mode: Mode
 
-    @property
-    def backend(self) -> GameBackend | SimulatedBackend:
-        """The kiosk and food bowls the live game calls."""
+    def live(self) -> GameBackend | SimulatedBackend:
+        """The kiosk and food bowls the live game calls, up to date with what is built."""
         ...
 
     def public_levels(self) -> list[dict[str, object]]: ...
@@ -74,12 +73,12 @@ class ModeRuntime(Protocol):
 
 
 class ClassicRuntime:
-    def __init__(self, mode: Mode, state_dir: Path = STATE_DIR) -> None:
+    def __init__(self, mode: Mode) -> None:
         self.mode = mode
         self._backend = GameBackend()
 
-    @property
-    def backend(self) -> GameBackend:
+    def live(self) -> GameBackend:
+        """The learner's own code runs on every call, so there is nothing to refresh."""
         return self._backend
 
     def public_levels(self) -> list[dict[str, object]]:
@@ -141,8 +140,8 @@ class AcceptanceRuntime:
         self._state_dir = state_dir
         self._backend = SimulatedBackend()
 
-    @property
-    def backend(self) -> SimulatedBackend:
+    def live(self) -> SimulatedBackend:
+        """Refreshes which tickets shipped, then plays them."""
         self.systems()
         return self._backend
 
@@ -250,7 +249,7 @@ def build_runtimes(board: ResultsBoard, state_dir: Path = STATE_DIR) -> dict[str
     runtimes: dict[str, ModeRuntime] = {}
     for key, mode in all_modes().items():
         if mode.runtime == "classic":
-            runtimes[key] = ClassicRuntime(mode, state_dir)
+            runtimes[key] = ClassicRuntime(mode)
         else:
             runtimes[key] = AcceptanceRuntime(mode, board, state_dir)
     return runtimes

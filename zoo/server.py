@@ -142,7 +142,7 @@ def questions() -> dict[str, str]:
 
 @router.post("/api/game/reset")
 async def reset(runtime: Runtime) -> dict[str, str]:
-    live = runtime.backend
+    live = runtime.live()
     await live.run(live.reset)
     return {"status": "reset"}
 
@@ -151,7 +151,7 @@ async def reset(runtime: Runtime) -> dict[str, str]:
 async def feed(
     runtime: Runtime, animal: str = Query(pattern=r"^[a-z]{2,16}$")
 ) -> dict[str, object]:
-    live = runtime.backend
+    live = runtime.live()
     outcome = await live.run(live.feed, animal)
     await asyncio.sleep(0.25 * outcome.attempts)
     return asdict(outcome)
@@ -163,7 +163,7 @@ async def ask(
 ) -> StreamingResponse | JSONResponse:
     """Streams the answer when async processing is built. Otherwise the visitor waits for the
     whole answer in silence, like a non-streaming API."""
-    live = runtime.backend
+    live = runtime.live()
     outcome: AskOutcome = await live.run(live.ask, q, storm)
     wait = min(outcome.sim_seconds * REAL_SECONDS_PER_SIM_SECOND, MAX_WAIT_SECONDS)
     meta = {key: value for key, value in asdict(outcome).items() if key != "answer"}

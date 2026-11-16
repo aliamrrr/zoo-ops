@@ -58,7 +58,7 @@ flowchart LR
 ```
 
 The routes and the CLI only call `ModeRuntime` methods: `systems()`, `public_levels()`,
-`backend`, `stream_formatter()`, `blueprint()`, `bench()`, `reset_paths()`. Adding a mode is
+`live()`, `stream_formatter()`, `blueprint()`, `bench()`, `reset_paths()`. Adding a mode is
 adding a folder with a manifest; no route changes.
 
 ## What happens when a visitor asks the Owl

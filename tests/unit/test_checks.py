@@ -77,4 +77,4 @@ def test_green_tests_ship_only_once_the_block_is_placed(tmp_path: Path) -> None:
     placement = {"slot": answer["01"]["slots"][0], "links": answer["01"]["links"]}
     runtime.blueprint().save({"01": placement})
     assert runtime.systems()["01"]["status"] == "healthy"
-    assert "01" in runtime.backend.online
+    assert "01" in runtime.live().online
