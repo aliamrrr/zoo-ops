@@ -1,0 +1,26 @@
+# Play Zoo Ops with Docker only. Your files stay on your machine: edit them in your editor,
+# save, and the game in the container picks up the change.
+#
+#   docker compose up                                   open http://localhost:8000
+#   docker compose run --rm --service-ports zoo play hard   start in Hard (or hardpp)
+#   docker compose run --rm zoo test 3                  the tests of level 3
+#   docker compose run --rm zoo test --mode hard 1      the acceptance tests of a Hard ticket
+#
+# The title screen of the game also switches between the three modes.
+services:
+  zoo:
+    build: .
+    image: zoo-ops:local
+    ports:
+      - "${ZOO_PORT:-8000}:8000"
+    environment:
+      ZOO_MODE: ${ZOO_MODE:-classic}
+      ZOO_PUBLIC_PORT: ${ZOO_PORT:-8000}
+    volumes:
+      - .:/app
+      - zoo-state:/home/zoo/state
+    command: ["play"]
+
+volumes:
+  # Test results and your blueprints survive `docker compose down`.
+  zoo-state:

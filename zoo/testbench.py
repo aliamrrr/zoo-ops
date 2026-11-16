@@ -14,7 +14,6 @@ from rich.padding import Padding
 from rich.table import Table
 from rich.text import Text
 
-from zoo.blueprint import Blueprint
 from zoo.cast import KEEPERS
 from zoo.checks import LevelReport, run_levels
 from zoo.modes import Mode, ModeLevel
@@ -253,7 +252,9 @@ def render_ticket(
     return grid
 
 
-def hard_bench(mode: Mode, levels: list[ModeLevel], blueprint: Blueprint, verbose: bool) -> int:
+def hard_bench(
+    mode: Mode, levels: list[ModeLevel], placed_blocks: frozenset[str], verbose: bool
+) -> int:
     console = Console(highlight=False)
     width = min(console.width, 100)
     console.print(gradient_strip(width))
@@ -266,7 +267,6 @@ def hard_bench(mode: Mode, levels: list[ModeLevel], blueprint: Blueprint, verbos
 
     with console.status("[grey62]Running the acceptance tests...", spinner="dots"):
         reports = run_levels(mode, levels)
-    placed_blocks = blueprint.placed()
 
     statuses: list[LevelStatus] = []
     for level in levels:

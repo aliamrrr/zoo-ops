@@ -3,7 +3,8 @@ name = "zoo-ops"
 version = "1.0.0"
 description = "Learn backend system design patterns by keeping a tiny zoo alive."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Ali Anass Amradouch" }]
 requires-python = ">=3.11"
 keywords = ["system-design", "education", "game", "backend", "interview"]
@@ -43,7 +44,7 @@ Homepage = "https://github.com/aliamrrr/zoo-ops"
 Issues = "https://github.com/aliamrrr/zoo-ops/issues"
 
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 # Only the game shell is a package. The levels and the two hard projects are the learner's
@@ -65,7 +66,9 @@ filterwarnings = ["ignore:The anyio.abc.BlockingPortal alias is deprecated:Depre
 
 [tool.coverage.run]
 source = ["zoo"]
-omit = ["zoo/__main__.py"]
+# pytest_report runs inside the pytest subprocess of every check: tests/unit/test_checks.py
+# exercises it end to end, where coverage cannot follow.
+omit = ["zoo/__main__.py", "zoo/pytest_report.py"]
 
 [tool.ruff]
 line-length = 100

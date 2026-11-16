@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import pytest
 from fastapi.testclient import TestClient
+
+from zoo.runtimes import format_sse
 
 
 def test_the_api_serves_each_mode(client: TestClient) -> None:
@@ -50,3 +53,16 @@ def test_each_app_keeps_its_own_state(make_client: Callable[[], TestClient]) -> 
 def test_static_files_are_revalidated(client: TestClient) -> None:
     assert client.get("/").headers["cache-control"] == "no-cache"
     assert client.get("/static/js/main.js").headers["cache-control"] == "no-cache"
+
+
+def test_the_owl_streams_once_async_processing_is_built(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    runtime = client.app.state.runtimes["hard"]  # type: ignore[attr-defined]
+    monkeypatch.setattr(runtime, "stream_formatter", lambda: format_sse)
+    response = client.get(
+        "/api/game/ask", params={"mode": "hard", "q": "Why do otters hold hands?"}
+    )
+    assert response.headers["content-type"].startswith("text/event-stream")
+    for event in ("event: meta", "event: token", "event: done"):
+        assert event in response.text

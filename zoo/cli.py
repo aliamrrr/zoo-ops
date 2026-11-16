@@ -129,9 +129,13 @@ def cmd_play(args: argparse.Namespace) -> int:
     key = args.mode_name or args.mode or os.environ.get("ZOO_MODE") or None
     mode = choose_mode(console) if key is None and sys.stdin.isatty() else find_mode(key or CLASSIC)
     port = free_port(args.port)
-    url = f"http://127.0.0.1:{port}/?mode={mode.key}"
+    # In a container the browser reaches the port Docker publishes, not the one inside.
+    shown_port = os.environ.get("ZOO_PUBLIC_PORT") or port
+    url = f"http://localhost:{shown_port}/?mode={mode.key}"
     if not (args.no_browser or env_flag("ZOO_NO_BROWSER")):
         threading.Timer(1.5, open_browser, args=(url,)).start()
+    reload = not args.no_reload
+    hint = "Edit your code and save: the game reloads by itself. " if reload else ""
     console.print(
         Text.assemble(
             "\n",
@@ -139,16 +143,17 @@ def cmd_play(args: argparse.Namespace) -> int:
             " is open at ",
             (url, f"bold {BLUE}"),
             "\n",
-            ("Edit your code and save: the game reloads by itself. Ctrl+C to stop.\n", "grey62"),
+            (f"{hint}Ctrl+C to stop.\n", "grey62"),
         )
     )
     uvicorn.run(
         "zoo.server:app",
         host=args.host,
         port=port,
-        reload=not args.no_reload,
-        reload_dirs=[str(ROOT / "levels"), str(ROOT / "zoo")],
+        reload=reload,
+        reload_dirs=[str(ROOT / "levels"), str(ROOT / "zoo")] if reload else None,
         log_level="warning",
+        timeout_graceful_shutdown=20,
     )
     return 0
 

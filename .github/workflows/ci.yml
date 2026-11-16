@@ -2,45 +2,126 @@ name: ci
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  lint:
+    name: lint and types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[dev]"
       - run: ruff check .
-      # Level and ticket tests are red on purpose until a player solves them,
-      # so CI checks that they are collected, and runs the tests that must stay green.
+      - run: ruff format --check .
+      - run: mypy
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Front end parses as ES modules
+        run: for file in zoo/static/js/*.js zoo/static/js/*/*.js; do [ -f "$file" ] && node --check "$file"; done
+
+  test:
+    name: tests (python ${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[dev]"
+      # The game itself, its API contract, the CLI and the guard that keeps solutions off main.
+      - run: pytest tests --cov --cov-report=term-missing:skip-covered --cov-fail-under=85
+      # Level and ticket tests are red on purpose until a player solves them:
+      # they must still be collected, and the Hard service's own unit tests stay green.
       - run: pytest --collect-only -q
-      - run: pytest tests -q
       - name: Hard modes collect, and the Hard service unit tests pass
+        shell: bash
         run: |
           (cd hard && pytest --collect-only -q && pytest tests/unit -q)
           (cd hardpp && pytest --collect-only -q)
-      - name: Boot the game and check its API
-        run: |
-          python -m uvicorn zoo.server:app --port 8000 &
-          for attempt in $(seq 1 20); do
-            curl -fsS http://127.0.0.1:8000/healthz && break
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:8000/api/game/systems > /dev/null
-          curl -fsS -X POST "http://127.0.0.1:8000/api/game/feed?animal=lion" > /dev/null
-          for mode in hard hardpp; do
-            curl -fsS "http://127.0.0.1:8000/api/levels?mode=$mode" > /dev/null
-            curl -fsS "http://127.0.0.1:8000/api/blueprint?mode=$mode" > /dev/null
-            curl -fsS "http://127.0.0.1:8000/api/game/systems?mode=$mode" > /dev/null
-          done
 
-  image:
-    needs: check
+  starter:
+    name: no ticket is solved on main
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t zoo-ops:${{ github.sha }} .
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e .
+      - run: pytest tests/starter -m slow -q
+
+  launchers:
+    name: launcher (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            zoo: ./zoo.sh
+          - os: macos-latest
+            zoo: ./zoo.sh
+          - os: windows-latest
+            zoo: .\zoo.cmd
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: The quick start of the README, on a fresh machine
+        run: ${{ matrix.zoo }} modes
+      - name: The game starts and answers in every mode
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then PY=.venv/Scripts/python.exe; else PY=.venv/bin/python; fi
+          $PY -m zoo play --no-browser --no-reload --port 8000 &
+          for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8000/ > /dev/null
+          for mode in classic hard hardpp; do
+            curl -fsS "http://127.0.0.1:8000/api/levels?mode=$mode" > /dev/null
+            curl -fsS "http://127.0.0.1:8000/api/game/systems?mode=$mode" > /dev/null
+            curl -fsS -X POST "http://127.0.0.1:8000/api/game/feed?mode=$mode&animal=lion" > /dev/null
+          done
+
+  docker:
+    name: docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build -t zoo-ops:ci .
+      - name: The container becomes healthy and serves the game
+        run: |
+          docker run -d --name zoo -p 8000:8000 zoo-ops:ci
+          for attempt in $(seq 1 30); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' zoo)" = healthy ] && break
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' zoo | grep -qx healthy
+          curl -fsS "http://127.0.0.1:8000/api/levels?mode=hard" > /dev/null
+          docker stop zoo
+      - name: Compose runs the tests of a level
+        run: docker compose run --rm zoo test 1 || [ $? -eq 1 ]

@@ -224,7 +224,8 @@ class AcceptanceRuntime:
         return Blueprint(self.mode, self._state_dir)
 
     def bench(self, keys: Sequence[str], verbose: bool) -> int:
-        return hard_bench(self.mode, self._levels(keys), self.blueprint(), verbose=verbose)
+        placed = self.blueprint().placed()
+        return hard_bench(self.mode, self._levels(keys), placed, verbose=verbose)
 
     def scenes(self, keys: Sequence[str]) -> list[tuple[Level, SceneResult]]:
         raise UsageError(
