@@ -1,7 +1,7 @@
 # Zoo Ops in a container: nothing to install but Docker.
 #   docker compose up                               play, with your files mounted (see compose.yaml)
 #   docker build -t zoo-ops . && docker run --rm -p 8000:8000 zoo-ops
-FROM python:3.12-slim
+FROM python:3.15-slim
 
 LABEL org.opencontainers.image.title="Zoo Ops" \
       org.opencontainers.image.description="Learn backend system design patterns by keeping a zoo alive." \
