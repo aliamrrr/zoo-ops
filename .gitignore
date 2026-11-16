@@ -8,3 +8,11 @@ __pycache__/
 *.db-shm
 .env
 .zoo/
+
+# Build and tool outputs
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+.mypy_cache/

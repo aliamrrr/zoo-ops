@@ -17,20 +17,50 @@ import tempfile
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol, TypedDict
 
 from zoo.modes import Mode, ModeLevel
-from zoo.registry import ROOT
+from zoo.paths import ROOT, STATE_DIR
 
 Outcome = Literal["pass", "fail", "skip"]
 LevelStatus = Literal["healthy", "broken", "todo"]
 
-STATE_DIR = ROOT / ".zoo"
 SUITE_TIMEOUT_S = 300
 FINGERPRINT_SUFFIXES = {".py", ".sql", ".json", ".toml"}
 SKIPPED_DIRS = {"__pycache__", ".pytest_cache", "tickets", "architecture"}
+
+
+class CheckResultDict(TypedDict):
+    name: str
+    outcome: Outcome
+    message: str
+
+
+class LevelReportDict(TypedDict):
+    status: LevelStatus
+    passed: int
+    total: int
+    results: list[CheckResultDict]
+
+
+class Snapshot(TypedDict):
+    """What the game knows about a mode's acceptance tests right now."""
+
+    state: Literal["ready", "checking"]
+    checked_at: float | None
+    levels: dict[str, LevelReportDict] | None
+
+
+class _CachedRun(TypedDict):
+    fingerprint: str
+    checked_at: float
+    levels: dict[str, LevelReportDict]
+
+
+class ResultsBoard(Protocol):
+    def snapshot(self, mode: Mode) -> Snapshot: ...
 
 
 @dataclass(frozen=True)
@@ -47,18 +77,16 @@ class LevelReport:
     total: int
     results: tuple[CheckResult, ...]
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> LevelReportDict:
         return {
             "status": self.status,
             "passed": self.passed,
             "total": self.total,
-            "results": [asdict(result) for result in self.results],
+            "results": [
+                {"name": result.name, "outcome": result.outcome, "message": result.message}
+                for result in self.results
+            ],
         }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, object]) -> LevelReport:
-        results = tuple(CheckResult(**item) for item in data["results"])  # type: ignore[arg-type]
-        return cls(data["status"], data["passed"], data["total"], results)  # type: ignore[arg-type]
 
 
 def fingerprint(mode: Mode) -> str:
@@ -87,6 +115,13 @@ def _status(results: list[CheckResult], collection_failed: bool) -> LevelStatus:
     return "todo"
 
 
+def _outcome(text: str) -> Outcome:
+    """pytest_report writes pass, fail or skip; anything else counts as a failure."""
+    if text == "pass":
+        return "pass"
+    return "skip" if text == "skip" else "fail"
+
+
 def _report(raw: list[dict[str, str]]) -> LevelReport:
     if not raw:
         return LevelReport("broken", 0, 1, (CheckResult("suite", "fail", "no test ran"),))
@@ -94,7 +129,7 @@ def _report(raw: list[dict[str, str]]) -> LevelReport:
     results = tuple(
         CheckResult(
             "collection" if "::" not in item["nodeid"] else _test_name(item["nodeid"]),
-            item["outcome"],  # type: ignore[arg-type]
+            _outcome(item["outcome"]),
             item["message"],
         )
         for item in raw
@@ -119,6 +154,8 @@ def run_levels(mode: Mode, levels: list[ModeLevel]) -> dict[str, LevelReport]:
             "pytest",
             *(level.test for level in levels),
             "-q",
+            # One ticket whose tests do not import must not hide the verdict of the others.
+            "--continue-on-collection-errors",
             "-p",
             "no:cacheprovider",
             "-p",
@@ -165,21 +202,22 @@ class StatusBoard:
         self._state_dir = state_dir
         self._lock = threading.Lock()
         self._runs: dict[str, Future[None]] = {}
-        self._latest: dict[str, dict[str, object]] = {}
+        self._latest: dict[str, _CachedRun] = {}
         self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="zoo-checks")
 
     def _cache_path(self, mode: Mode) -> Path:
         return self._state_dir / f"status-{mode.key}.json"
 
-    def _read_cache(self, mode: Mode) -> dict[str, object] | None:
+    def _read_cache(self, mode: Mode) -> _CachedRun | None:
         if mode.key in self._latest:
             return self._latest[mode.key]
         try:
-            return json.loads(self._cache_path(mode).read_text(encoding="utf-8"))
+            cached: _CachedRun = json.loads(self._cache_path(mode).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
+        return cached
 
-    def _write_cache(self, mode: Mode, payload: dict[str, object]) -> None:
+    def _write_cache(self, mode: Mode, payload: _CachedRun) -> None:
         """Results live in memory first; the file only lets them survive a restart."""
         self._latest[mode.key] = payload
         try:
@@ -202,10 +240,10 @@ class StatusBoard:
             },
         )
 
-    def snapshot(self, mode: Mode) -> dict[str, object]:
+    def snapshot(self, mode: Mode) -> Snapshot:
         current = fingerprint(mode)
         cached = self._read_cache(mode)
-        fresh = cached is not None and cached.get("fingerprint") == current
+        fresh = cached is not None and cached["fingerprint"] == current
         with self._lock:
             running = self._runs.get(mode.key)
             if running is not None and running.done():
@@ -216,8 +254,8 @@ class StatusBoard:
                 running = self._runs[mode.key]
         return {
             "state": "ready" if fresh and running is None else "checking",
-            "checked_at": cached.get("checked_at") if cached else None,
-            "levels": cached.get("levels") if cached else None,
+            "checked_at": cached["checked_at"] if cached else None,
+            "levels": cached["levels"] if cached else None,
         }
 
     def wait(self, mode: Mode, timeout: float | None = None) -> None:

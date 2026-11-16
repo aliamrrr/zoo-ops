@@ -1,0 +1,12 @@
+# One line ending for everyone, whatever their OS or git settings.
+* text=auto eol=lf
+
+# Windows scripts must keep CRLF to run in cmd.exe and PowerShell.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

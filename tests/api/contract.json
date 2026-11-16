@@ -1,0 +1,948 @@
+{
+  "GET /api/blueprint classic": {
+    "body": {
+      "detail": "str"
+    },
+    "status": 404
+  },
+  "GET /api/blueprint hard": {
+    "body": {
+      "blueprint": {
+        "blocks": [
+          {
+            "blurb": "str",
+            "label": "str",
+            "level": "str"
+          }
+        ],
+        "components": [
+          {
+            "id": "str",
+            "kind": "str",
+            "label": "str",
+            "x": "int",
+            "y": "int"
+          }
+        ],
+        "edges": [
+          [
+            "str"
+          ]
+        ],
+        "height": "int",
+        "intro": "str",
+        "slots": [
+          {
+            "id": "str",
+            "x": "int",
+            "y": "int"
+          }
+        ],
+        "title": "str",
+        "width": "int"
+      },
+      "progress": {
+        "checks": {
+          "01": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "02": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "03": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "04": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "05": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "06": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "07": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "08": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "09": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "10": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          }
+        },
+        "correct": "int",
+        "placements": "map",
+        "total": "int"
+      }
+    },
+    "status": 200
+  },
+  "GET /api/blueprint hardpp": {
+    "body": {
+      "blueprint": {
+        "blocks": [
+          {
+            "blurb": "str",
+            "label": "str",
+            "level": "str"
+          }
+        ],
+        "components": [
+          {
+            "id": "str",
+            "kind": "str",
+            "label": "str",
+            "x": "int",
+            "y": "int"
+          }
+        ],
+        "edges": [
+          [
+            "str"
+          ]
+        ],
+        "height": "int",
+        "intro": "str",
+        "slots": [
+          {
+            "id": "str",
+            "x": "int",
+            "y": "int"
+          }
+        ],
+        "title": "str",
+        "width": "int"
+      },
+      "progress": {
+        "checks": {
+          "01": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "02": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "03": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "04": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "05": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "06": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "07": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "08": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "09": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          },
+          "10": {
+            "extra": "int",
+            "hint": "str",
+            "missing": "int",
+            "verdict": "str"
+          }
+        },
+        "correct": "int",
+        "placements": "map",
+        "total": "int"
+      }
+    },
+    "status": 200
+  },
+  "GET /api/game/ask classic": {
+    "body": {
+      "answer": "str",
+      "cache_hit": "bool",
+      "cost": "int",
+      "failed": "bool",
+      "notes": [
+        "str"
+      ],
+      "provider": "str",
+      "sim_seconds": "float",
+      "streamed": "bool"
+    },
+    "status": 200
+  },
+  "GET /api/game/ask hard": {
+    "body": {
+      "answer": "str",
+      "cache_hit": "bool",
+      "cost": "int",
+      "failed": "bool",
+      "notes": [
+        "str"
+      ],
+      "provider": "str",
+      "sim_seconds": "float",
+      "streamed": "bool"
+    },
+    "status": 200
+  },
+  "GET /api/game/ask hardpp": {
+    "body": {
+      "answer": "str",
+      "cache_hit": "bool",
+      "cost": "int",
+      "failed": "bool",
+      "notes": [
+        "str"
+      ],
+      "provider": "str",
+      "sim_seconds": "float",
+      "streamed": "bool"
+    },
+    "status": 200
+  },
+  "GET /api/game/questions": {
+    "body": {
+      "ant": "str",
+      "canary": "str",
+      "cat": "str",
+      "fox": "str",
+      "lion": "str",
+      "mole": "str",
+      "otter": "str",
+      "penguin": "str"
+    },
+    "status": 200
+  },
+  "GET /api/game/systems classic": {
+    "body": {
+      "01": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "02": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "03": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "04": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "05": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "06": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "07": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "08": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "09": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      },
+      "10": {
+        "headline": "str",
+        "metrics": "map",
+        "status": "str"
+      }
+    },
+    "status": 200
+  },
+  "GET /api/game/systems hard": {
+    "body": {
+      "01": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "02": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "03": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "04": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "05": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "06": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "07": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "08": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "09": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "10": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      }
+    },
+    "status": 200
+  },
+  "GET /api/game/systems hardpp": {
+    "body": {
+      "01": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "02": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "03": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "04": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "05": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "06": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "07": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "08": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "09": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      },
+      "10": {
+        "checking": "bool",
+        "headline": "str",
+        "metrics": "map",
+        "placed": "bool",
+        "results": [
+          {
+            "message": "str",
+            "name": "str",
+            "outcome": "str"
+          }
+        ],
+        "status": "str",
+        "tests_pass": "bool"
+      }
+    },
+    "status": 200
+  },
+  "GET /api/levels classic": {
+    "body": [
+      {
+        "animal": "str",
+        "file": "str",
+        "id": "str",
+        "keeper": "str",
+        "number": "int",
+        "pattern": "str",
+        "pitch": "str",
+        "slug": "str",
+        "station": "str",
+        "todos": [
+          "str"
+        ],
+        "todos_left": [
+          "str"
+        ]
+      }
+    ],
+    "status": 200
+  },
+  "GET /api/levels hard": {
+    "body": [
+      {
+        "id": "str",
+        "label": "str",
+        "number": "int",
+        "pattern": "str",
+        "test": "str",
+        "ticket": "str",
+        "ticket_text": "str",
+        "title": "str",
+        "with": "str",
+        "without": "str"
+      }
+    ],
+    "status": 200
+  },
+  "GET /api/levels hardpp": {
+    "body": [
+      {
+        "id": "str",
+        "label": "str",
+        "number": "int",
+        "pattern": "str",
+        "test": "str",
+        "ticket": "str",
+        "ticket_text": "str",
+        "title": "str",
+        "with": "str",
+        "without": "str"
+      }
+    ],
+    "status": 200
+  },
+  "GET /api/levels unknown": {
+    "body": {
+      "detail": "str"
+    },
+    "status": 404
+  },
+  "GET /api/modes": {
+    "body": [
+      {
+        "has_blueprint": "bool",
+        "key": "str",
+        "levels": [
+          {
+            "id": "str",
+            "label": "str",
+            "pattern": "str",
+            "title": "str",
+            "with": "str",
+            "without": "str"
+          }
+        ],
+        "project": "str",
+        "tagline": "str",
+        "title": "str"
+      }
+    ],
+    "status": 200
+  },
+  "GET /healthz": {
+    "body": {
+      "status": "str"
+    },
+    "status": 200
+  },
+  "GET /readyz": {
+    "body": {
+      "status": "str"
+    },
+    "status": 200
+  },
+  "POST /api/game/feed classic": {
+    "body": {
+      "attempts": "int",
+      "delivered_grams": "int",
+      "notes": [
+        "str"
+      ],
+      "replays": "int"
+    },
+    "status": 200
+  },
+  "POST /api/game/feed hard": {
+    "body": {
+      "attempts": "int",
+      "delivered_grams": "int",
+      "notes": [
+        "str"
+      ],
+      "replays": "int"
+    },
+    "status": 200
+  },
+  "POST /api/game/feed hardpp": {
+    "body": {
+      "attempts": "int",
+      "delivered_grams": "int",
+      "notes": [
+        "str"
+      ],
+      "replays": "int"
+    },
+    "status": 200
+  },
+  "POST /api/game/reset classic": {
+    "body": {
+      "status": "str"
+    },
+    "status": 200
+  },
+  "POST /api/game/reset hard": {
+    "body": {
+      "status": "str"
+    },
+    "status": 200
+  },
+  "POST /api/game/reset hardpp": {
+    "body": {
+      "status": "str"
+    },
+    "status": 200
+  },
+  "POST /api/levels/01/play": {
+    "body": {
+      "events": [
+        {
+          "text": "str",
+          "tone": "str"
+        }
+      ],
+      "headline": "str",
+      "level": "str",
+      "metrics": "map",
+      "status": "str",
+      "todos_left": [
+        "str"
+      ]
+    },
+    "status": 200
+  },
+  "PUT /api/blueprint hard": {
+    "body": {
+      "checks": {
+        "01": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "02": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "03": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "04": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "05": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "06": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "07": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "08": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "09": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "10": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        }
+      },
+      "correct": "int",
+      "placements": "map",
+      "total": "int"
+    },
+    "status": 200
+  },
+  "PUT /api/blueprint hardpp": {
+    "body": {
+      "checks": {
+        "01": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "02": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "03": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "04": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "05": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "06": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "07": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "08": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "09": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        },
+        "10": {
+          "extra": "int",
+          "hint": "str",
+          "missing": "int",
+          "verdict": "str"
+        }
+      },
+      "correct": "int",
+      "placements": "map",
+      "total": "int"
+    },
+    "status": 200
+  }
+}

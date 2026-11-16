@@ -15,9 +15,11 @@ from rich.table import Table
 from rich.text import Text
 
 from zoo.blueprint import Blueprint
+from zoo.cast import KEEPERS
 from zoo.checks import LevelReport, run_levels
 from zoo.modes import Mode, ModeLevel
-from zoo.registry import LEVELS, ROOT, Level
+from zoo.paths import ROOT
+from zoo.registry import LEVELS, Level
 from zoo.sprites import gradient_strip, palette, sprite_text
 
 Outcome = Literal["pass", "fail", "todo"]
@@ -148,7 +150,7 @@ def summary_lines(results: list[TestResult], level: Level, max_failures: int = 3
         lines.append(
             message_line(
                 f"... {len(failures) - max_failures} more failures, run: "
-                f"python -m zoo test {level.number}"
+                f"zoo test {level.number}"
             )
         )
     waiting: dict[str, int] = defaultdict(int)
@@ -187,7 +189,7 @@ def render_level(level: Level, results: list[TestResult], verbose: bool) -> Tabl
 
 
 def render_scoreboard(
-    console: Console, statuses: list[LevelStatus], total: int, play: str = "python -m zoo play"
+    console: Console, statuses: list[LevelStatus], total: int, play: str = "zoo play"
 ) -> None:
     online = statuses.count("healthy")
     colors = {"healthy": GREEN, "broken": RED, "todo": AMBER}
@@ -232,7 +234,7 @@ def render_ticket(
     if not verbose and len(failures) > 3:
         lines.append(
             message_line(
-                f"... {len(failures) - 3} more, run: python -m zoo test --mode {mode.key} "
+                f"... {len(failures) - 3} more, run: zoo test --mode {mode.key} "
                 f"{level.number} -v"
             )
         )
@@ -241,18 +243,17 @@ def render_ticket(
             badge_line(
                 "todo",
                 "blueprint",
-                f"place block {level.id} first: python -m zoo play "
-                f"--mode {mode.key}, Blueprint tab",
+                f"place block {level.id} first: zoo play {mode.key}, Blueprint tab",
             )
         )
     grid = Table.grid(padding=(0, 3))
     grid.add_column(width=12, no_wrap=True)
     grid.add_column(ratio=1)
-    grid.add_row(sprite_text(LEVELS[level.number - 1].animal), Group(*lines))
+    grid.add_row(sprite_text(KEEPERS[level.id].animal), Group(*lines))
     return grid
 
 
-def hard_bench(mode: Mode, levels: list[ModeLevel], verbose: bool) -> int:
+def hard_bench(mode: Mode, levels: list[ModeLevel], blueprint: Blueprint, verbose: bool) -> int:
     console = Console(highlight=False)
     width = min(console.width, 100)
     console.print(gradient_strip(width))
@@ -265,20 +266,20 @@ def hard_bench(mode: Mode, levels: list[ModeLevel], verbose: bool) -> int:
 
     with console.status("[grey62]Running the acceptance tests...", spinner="dots"):
         reports = run_levels(mode, levels)
-    checks = Blueprint(mode).progress()["checks"]
+    placed_blocks = blueprint.placed()
 
     statuses: list[LevelStatus] = []
     for level in levels:
         report = reports[level.id]
         statuses.append(report.status)
-        placed = checks[level.id]["verdict"] == "correct"  # type: ignore[index]
+        placed = level.id in placed_blocks
         console.print(
             Padding(render_ticket(mode, level, report, placed, verbose or len(levels) == 1), (0, 2))
         )
         console.print()
 
     if len(levels) == len(mode.levels):
-        render_scoreboard(console, statuses, len(levels), f"python -m zoo play --mode {mode.key}")
+        render_scoreboard(console, statuses, len(levels), f"zoo play {mode.key}")
     console.print(gradient_strip(width))
     return 0 if all(status == "healthy" for status in statuses) else 1
 

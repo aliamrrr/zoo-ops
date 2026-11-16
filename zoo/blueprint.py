@@ -1,7 +1,8 @@
 """The architecture blueprint of a hard mode: where each pattern belongs and what it talks to.
 
-The page only ever receives the public part of the blueprint. Answers stay on the server and a
-placement is checked here, so the right slot cannot be read from the browser's network tab.
+The page only ever receives the public part of the blueprint and a placement is checked here,
+so the game never hands the answer to the browser. The answers are in the repository
+(`architecture/blueprint.json`): they are spoilers for whoever opens that file, not secrets.
 """
 
 from __future__ import annotations
@@ -9,14 +10,32 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal, TypedDict
 
 from zoo.modes import Mode
-from zoo.registry import ROOT
+from zoo.paths import STATE_DIR
 
 Verdict = Literal["correct", "wrong_place", "wrong_links", "unplaced"]
 PUBLIC_KEYS = ("title", "intro", "width", "height", "components", "edges", "slots", "blocks")
-STATE_DIR = ROOT / ".zoo"
+
+
+class StoredPlacement(TypedDict):
+    slot: str | None
+    links: list[str]
+
+
+class BlockCheckDict(TypedDict):
+    verdict: Verdict
+    missing: int
+    extra: int
+    hint: str
+
+
+class Progress(TypedDict):
+    placements: dict[str, StoredPlacement]
+    checks: dict[str, BlockCheckDict]
+    correct: int
+    total: int
 
 
 @dataclass(frozen=True)
@@ -32,7 +51,7 @@ class BlockCheck:
     extra: int
     hint: str
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> BlockCheckDict:
         return {
             "verdict": self.verdict,
             "missing": self.missing,
@@ -48,16 +67,18 @@ class InvalidPlacement(ValueError):
 class Blueprint:
     def __init__(self, mode: Mode, state_dir: Path = STATE_DIR) -> None:
         self.mode = mode
-        self._data = json.loads(mode.blueprint_path.read_text(encoding="utf-8"))
+        self._data: dict[str, Any] = json.loads(mode.blueprint_path.read_text(encoding="utf-8"))
         self._state_path = state_dir / f"blueprint-{mode.key}.json"
-        self.slot_ids = frozenset(slot["id"] for slot in self._data["slots"])
-        self.component_ids = frozenset(item["id"] for item in self._data["components"])
-        self.levels = tuple(block["level"] for block in self._data["blocks"])
+        self.slot_ids: frozenset[str] = frozenset(slot["id"] for slot in self._data["slots"])
+        self.component_ids: frozenset[str] = frozenset(
+            item["id"] for item in self._data["components"]
+        )
+        self.levels: tuple[str, ...] = tuple(block["level"] for block in self._data["blocks"])
 
-    def public(self) -> dict[str, object]:
+    def public(self) -> dict[str, Any]:
         return {key: self._data[key] for key in PUBLIC_KEYS}
 
-    def parse(self, raw: dict[str, dict[str, object]]) -> dict[str, Placement]:
+    def parse(self, raw: dict[str, dict[str, Any]]) -> dict[str, Placement]:
         placements: dict[str, Placement] = {}
         used_slots: set[str] = set()
         for level, item in raw.items():
@@ -93,34 +114,39 @@ class Blueprint:
     def check(self, placements: dict[str, Placement]) -> dict[str, BlockCheck]:
         return {level: self.check_block(level, placements.get(level)) for level in self.levels}
 
-    def save(self, raw: dict[str, dict[str, object]]) -> dict[str, object]:
+    def save(self, raw: dict[str, dict[str, Any]]) -> Progress:
         placements = self.parse(raw)
-        checks = self.check(placements)
-        stored = {
+        self._state_path.parent.mkdir(parents=True, exist_ok=True)
+        self._state_path.write_text(
+            json.dumps({"placements": self._stored(placements)}), encoding="utf-8"
+        )
+        return self._progress(placements)
+
+    def progress(self) -> Progress:
+        try:
+            raw = json.loads(self._state_path.read_text(encoding="utf-8"))["placements"]
+            placements = self.parse(raw)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError, InvalidPlacement):
+            placements = {}
+        return self._progress(placements)
+
+    def placed(self) -> frozenset[str]:
+        """The blocks that sit at the right place with the right links."""
+        checks = self.progress()["checks"]
+        return frozenset(level for level, check in checks.items() if check["verdict"] == "correct")
+
+    @staticmethod
+    def _stored(placements: dict[str, Placement]) -> dict[str, StoredPlacement]:
+        return {
             level: {"slot": placement.slot, "links": sorted(placement.links)}
             for level, placement in placements.items()
         }
-        self._state_path.parent.mkdir(parents=True, exist_ok=True)
-        self._state_path.write_text(json.dumps({"placements": stored}), encoding="utf-8")
-        return self._progress(stored, checks)
 
-    def progress(self) -> dict[str, object]:
-        try:
-            stored = json.loads(self._state_path.read_text(encoding="utf-8"))["placements"]
-            placements = self.parse(stored)
-        except (OSError, ValueError, KeyError, InvalidPlacement):
-            stored, placements = {}, {}
-        return self._progress(stored, self.check(placements))
-
-    def _progress(
-        self, stored: dict[str, object], checks: dict[str, BlockCheck]
-    ) -> dict[str, object]:
+    def _progress(self, placements: dict[str, Placement]) -> Progress:
+        checks = self.check(placements)
         return {
-            "placements": stored,
+            "placements": self._stored(placements),
             "checks": {level: check.to_dict() for level, check in checks.items()},
             "correct": sum(check.verdict == "correct" for check in checks.values()),
             "total": len(checks),
         }
-
-    def is_placed(self, level: str) -> bool:
-        return self.progress()["checks"][level]["verdict"] == "correct"  # type: ignore[index]

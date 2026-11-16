@@ -10,18 +10,17 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import importlib
 import random
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from types import ModuleType
 from typing import Any, TypeVar
 
 import fakeredis
 
 from zoo import owl
+from zoo.registry import level_module
 
 T = TypeVar("T")
 
@@ -31,10 +30,6 @@ OWL_COST = 3
 PARROT_COST = 1
 NAIVE_TIMEOUT = 10.0
 MEAL_GRAMS = 50
-
-
-def level_module(name: str) -> ModuleType:
-    return importlib.import_module(f"levels.{name}")
 
 
 class SimClock:
@@ -145,12 +140,13 @@ class Kiosk:
 
     def _call_providers(self, question: str, outcome: AskOutcome) -> tuple[str, str]:
         try:
-            return self.reliability.complete_with_fallback(
+            provider, answer = self.reliability.complete_with_fallback(
                 question, self.providers, self.breakers, self.policy, timeout=3.0
             )
         except NotImplementedError:
             add_note(outcome.notes, "no retry or fallback: one long call to the Owl")
             return "owl", self._owl_complete(question, NAIVE_TIMEOUT)
+        return str(provider), str(answer)
 
 
 class FoodBowls:

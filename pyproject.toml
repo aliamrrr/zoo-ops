@@ -1,13 +1,71 @@
 [project]
 name = "zoo-ops"
 version = "1.0.0"
-description = "Learn ten system design patterns by fixing the backend of a tiny animal game."
+description = "Learn backend system design patterns by keeping a tiny zoo alive."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Ali Anass Amradouch" }]
 requires-python = ">=3.11"
+keywords = ["system-design", "education", "game", "backend", "interview"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Framework :: FastAPI",
+    "Intended Audience :: Education",
+    "Topic :: Education",
+]
+# The game is an application, so it pins what it was tested with: a learner's red test must
+# mean their code, never a new release of a dependency. Dependabot proposes the upgrades.
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn==0.32.1",
+    "pydantic==2.14.3",
+    "rich==13.9.4",
+    "pytest==8.3.4",
+    "redis==5.2.1",
+    "fakeredis==2.26.2",
+    "PyJWT==2.10.1",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.8.4",
+    "mypy==2.4.1",
+    "pytest-cov==7.1.0",
+    "pre-commit==4.7.0",
+]
+
+[project.scripts]
+zoo = "zoo.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/aliamrrr/zoo-ops"
+Issues = "https://github.com/aliamrrr/zoo-ops/issues"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+# Only the game shell is a package. The levels and the two hard projects are the learner's
+# workspace: they are read from the repository, next to `zoo/`, never installed.
+[tool.setuptools.packages.find]
+include = ["zoo*"]
+
+[tool.setuptools.package-data]
+zoo = ["static/**/*"]
 
 [tool.pytest.ini_options]
+# `pytest` alone runs the Classic levels, red until you solve them. `pytest tests` checks the
+# game itself.
 testpaths = ["levels"]
 pythonpath = ["."]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not slow'"
+markers = ["slow: runs the hard modes' whole acceptance suites (about two minutes)"]
+filterwarnings = ["ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["zoo"]
+omit = ["zoo/__main__.py"]
 
 [tool.ruff]
 line-length = 100
@@ -21,3 +79,19 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 [tool.ruff.lint.per-file-ignores]
 # Starter files import what the solution will need before the TODOs use it.
 "levels/*/*.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["zoo", "tests"]
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# The learner's level files are imported at run time and are theirs to shape.
+module = ["levels.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["fakeredis.*"]
+ignore_missing_imports = true

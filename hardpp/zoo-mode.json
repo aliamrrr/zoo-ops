@@ -2,6 +2,7 @@
   "key": "hardpp",
   "title": "Zoo Ops [Hard++]",
   "tagline": "Interview-grade distributed systems. The planet is on fire.",
+  "runtime": "acceptance",
   "project": "src/zoo_planet",
   "tests": "tests",
   "levels": [

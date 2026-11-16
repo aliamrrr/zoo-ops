@@ -2,6 +2,7 @@
   "key": "hard",
   "title": "Zoo Ops [Hard]",
   "tagline": "A real service, real tickets. Find where the code goes.",
+  "runtime": "acceptance",
   "project": "src/zoo_platform",
   "tests": "tests",
   "levels": [

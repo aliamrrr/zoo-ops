@@ -1,74 +1,116 @@
-"""The three ways to play: Classic (guided TODOs), Hard (a real service), Hard++ (distributed).
+"""The three ways to play. Each mode is a folder with a `zoo-mode.json` manifest:
 
-Classic is described by `zoo.registry`. Each hard mode lives in its own folder with a
-`zoo-mode.json` manifest, a project, its acceptance tests, tickets and an architecture blueprint.
+- `levels/`  Classic: ten guided levels, one file with TODOs each
+- `hard/`    Hard: a real service, ten tickets, acceptance tests and an architecture blueprint
+- `hardpp/`  Hard++: a distributed system in a deterministic simulation, same shape as Hard
+
+Manifests are validated when they load, so a broken one stops the game at start-up with a
+clear message instead of failing in the middle of a shift.
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
+from typing import Literal
 
-from zoo.registry import LEVELS, ROOT
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from zoo.paths import MODE_FOLDERS, ROOT
 
 CLASSIC = "classic"
-HARD_MODE_FOLDERS = {"hard": ROOT / "hard", "hardpp": ROOT / "hardpp"}
+MANIFEST = "zoo-mode.json"
+Runtime = Literal["classic", "acceptance"]
 
 
-@dataclass(frozen=True)
-class ModeLevel:
-    id: str
+class Exercise(BaseModel):
+    """A Classic level: the file the learner edits and the functions to write.
+
+    `naive` lists the TODOs that already work in the starter, the slow way the pattern exists
+    to fix (an N+1 query), instead of raising NotImplementedError.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    file: str
+    todos: tuple[str, ...]
+    naive: tuple[str, ...] = ()
+
+
+class ModeLevel(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid", populate_by_name=True)
+
+    id: str = Field(pattern=r"^\d{2}$")
     label: str
     pattern: str
     title: str
-    ticket: str
     test: str
     without: str
-    with_: str
+    with_: str = Field(alias="with")
+    ticket: str | None = None
+    exercise: Exercise | None = None
 
     @property
     def number(self) -> int:
         return int(self.id)
 
-    def to_public_dict(self, root: Path) -> dict[str, object]:
+    def summary(self) -> dict[str, object]:
         return {
             "id": self.id,
-            "number": self.number,
             "label": self.label,
             "pattern": self.pattern,
             "title": self.title,
-            "ticket": self.ticket,
-            "ticket_text": (root / self.ticket).read_text(encoding="utf-8"),
-            "test": self.test,
             "without": self.without,
             "with": self.with_,
         }
 
 
-@dataclass(frozen=True)
-class Mode:
-    key: str
+class Mode(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    key: str = Field(pattern=r"^[a-z]{2,12}$")
     title: str
     tagline: str
+    runtime: Runtime
     root: Path
     project: str
     tests: str
     levels: tuple[ModeLevel, ...]
 
+    @model_validator(mode="after")
+    def _levels_fit_the_runtime(self) -> Mode:
+        expected = [f"{number:02d}" for number in range(1, len(self.levels) + 1)]
+        if [level.id for level in self.levels] != expected:
+            raise ValueError("level ids must run from 01 in order")
+        for level in self.levels:
+            if self.runtime == "classic" and level.exercise is None:
+                raise ValueError(f"Classic level {level.id} needs an exercise")
+            if self.runtime == "acceptance" and level.ticket is None:
+                raise ValueError(f"level {level.id} needs a ticket")
+        return self
+
     @property
-    def is_classic(self) -> bool:
-        return self.key == CLASSIC
+    def project_path(self) -> Path:
+        return (self.root / self.project).resolve()
+
+    @property
+    def project_label(self) -> str:
+        """The learner's project as shown to them, relative to the repository."""
+        return self.project_path.relative_to(ROOT).as_posix()
 
     @property
     def blueprint_path(self) -> Path:
         return self.root / "architecture" / "blueprint.json"
 
+    @property
+    def has_blueprint(self) -> bool:
+        return self.blueprint_path.is_file()
+
     def find_level(self, key: str | int) -> ModeLevel:
-        text = str(key).strip()
+        text = str(key).strip().lower()
         for level in self.levels:
-            if text in {level.id, str(level.number)}:
+            if text in {level.id, str(level.number), level.test}:
                 return level
         raise KeyError(f"unknown level {key!r} in {self.title}, expected 1 to {len(self.levels)}")
 
@@ -77,80 +119,21 @@ class Mode:
             "key": self.key,
             "title": self.title,
             "tagline": self.tagline,
-            "project": f"{self.root.name}/{self.project}" if not self.is_classic else "levels",
-            "has_blueprint": not self.is_classic,
-            "levels": [
-                {
-                    "id": level.id,
-                    "label": level.label,
-                    "pattern": level.pattern,
-                    "title": level.title,
-                    "without": level.without,
-                    "with": level.with_,
-                }
-                for level in self.levels
-            ],
+            "project": self.project_label,
+            "has_blueprint": self.has_blueprint,
+            "levels": [level.summary() for level in self.levels],
         }
 
 
-def _classic() -> Mode:
-    levels = tuple(
-        ModeLevel(
-            id=level.id,
-            label=level.pattern,
-            pattern=level.pattern,
-            title=level.station,
-            ticket="",
-            test=f"levels/{level.slug}",
-            without=level.pitch,
-            with_=level.victory,
-        )
-        for level in LEVELS
-    )
-    return Mode(
-        key=CLASSIC,
-        title="Zoo Ops",
-        tagline="Ten guided levels. Fill in the TODOs, the keepers wake up.",
-        root=ROOT,
-        project="levels",
-        tests="levels",
-        levels=levels,
-    )
-
-
-def _load_manifest(folder: Path) -> Mode:
-    data = json.loads((folder / "zoo-mode.json").read_text(encoding="utf-8"))
-    levels = tuple(
-        ModeLevel(
-            id=item["id"],
-            label=item["label"],
-            pattern=item["pattern"],
-            title=item["title"],
-            ticket=item["ticket"],
-            test=item["test"],
-            without=item["without"],
-            with_=item["with"],
-        )
-        for item in data["levels"]
-    )
-    return Mode(
-        key=data["key"],
-        title=data["title"],
-        tagline=data["tagline"],
-        root=folder,
-        project=data["project"],
-        tests=data["tests"],
-        levels=levels,
-    )
+def load_mode(folder: Path) -> Mode:
+    data = json.loads((folder / MANIFEST).read_text(encoding="utf-8"))
+    return Mode.model_validate({**data, "root": folder})
 
 
 @cache
 def all_modes() -> dict[str, Mode]:
-    modes = {CLASSIC: _classic()}
-    for key, folder in HARD_MODE_FOLDERS.items():
-        if (folder / "zoo-mode.json").is_file():
-            modes[key] = _load_manifest(folder)
-    return modes
+    modes = (load_mode(folder) for folder in MODE_FOLDERS if (folder / MANIFEST).is_file())
+    return {mode.key: mode for mode in modes}
 
 
 def find_mode(key: str | None) -> Mode:
