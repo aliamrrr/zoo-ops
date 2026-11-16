@@ -5,7 +5,7 @@
  * The answers never reach the page: only verdicts and hints come back.
  */
 import { api } from "./api.js";
-import { el } from "./game.js";
+import { el } from "./dom.js";
 import { SYSTEMS } from "./systems.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";

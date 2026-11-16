@@ -3,7 +3,7 @@
  * keeps the pattern, whether it is built, and flashes each time the pattern acts in the game.
  */
 import { critterCanvas, paintCritterCanvas } from "./art.js";
-import { el } from "./game.js";
+import { el } from "./dom.js";
 import { SYSTEMS, SYSTEM_IDS } from "./systems.js";
 
 export class Dock {

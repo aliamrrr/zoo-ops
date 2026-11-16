@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { critterCanvas } from "./art.js";
-import { el } from "./game.js";
+import { el } from "./dom.js";
 import { renderMarkdown } from "./markdown.js";
 import { CLASSIC } from "./mode.js";
 import { SYSTEMS } from "./systems.js";

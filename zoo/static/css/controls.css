@@ -1,0 +1,121 @@
+/* Buttons, chips and the play layout. */
+
+/* Buttons and chips */
+
+.button {
+  padding: 8px 20px;
+  font: 800 17px var(--font-display);
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--ink);
+  cursor: pointer;
+  transition: transform 80ms, box-shadow 80ms;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.button-primary {
+  color: #ffffff;
+  background: var(--primary);
+  text-shadow: 0 2px 0 var(--primary-dark);
+}
+
+.button-big {
+  padding: 10px 34px;
+  font-size: 22px;
+  animation: wiggle 2.4s ease-in-out infinite;
+}
+
+.pattern-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px 0 0;
+  font: 800 12px var(--font-display);
+  line-height: 20px;
+  color: var(--ink);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--chip) 16%, #ffffff);
+  border: 2px solid var(--chip);
+  border-radius: 999px;
+}
+
+.pattern-chip b {
+  padding: 0 6px 0 8px;
+  color: #ffffff;
+  background: var(--chip);
+  border-radius: 999px 0 0 999px;
+}
+
+button.pattern-chip {
+  cursor: pointer;
+}
+
+button.pattern-chip:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.chip {
+  display: inline-block;
+  padding: 1px 10px;
+  font: 800 12px var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: #efeaf4;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+.chip[data-status="healthy"] { color: #ffffff; background: var(--ok); }
+.chip[data-status="broken"] { color: #ffffff; background: var(--bad); }
+.chip[data-status="todo"] { background: #ffd23f; }
+.chip[data-status="checking"] { background: #c9ecff; }
+
+/* Play layout */
+
+.play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "stage dock"
+    "stage journal";
+  gap: 12px 14px;
+  align-items: start;
+}
+
+.stage {
+  grid-area: stage;
+  position: relative;
+  width: 100%;
+  max-width: max(620px, calc((100vh - 78px) * 16 / 9));
+  margin-inline: auto;
+  overflow: hidden;
+  background: #8dd67c;
+  border: 4px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 0 8px 0 rgb(75 55 87 / 28%);
+  container-type: inline-size;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
