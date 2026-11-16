@@ -18,7 +18,8 @@ it must talk to. Two places on the diagram are traps. A ticket only ships, in th
 its tests pass **and** its block is in the right place.
 
 ```bash
-python -m zoo play --mode hardpp
+./zoo.sh play hardpp        # macOS, Linux, WSL
+.\zoo.cmd play hardpp        # Windows
 ```
 
 ## Run the tests
@@ -65,4 +66,5 @@ Tickets say which ones must not change.
 python -m zoo reset --mode hardpp --project
 ```
 
-This restores `hardpp/src/zoo_planet` from the `hardpp-starter` tag and discards your changes there.
+This restores `hardpp/src/zoo_planet` to the version you started from (where your branch left
+`main`) and discards your changes there.

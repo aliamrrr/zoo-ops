@@ -1,0 +1,23 @@
+name: New level or ticket
+description: Propose a pattern to teach, as a Classic level or a Hard / Hard++ ticket.
+labels: [exercise]
+body:
+  - type: input
+    id: pattern
+    attributes:
+      label: Pattern
+      placeholder: "Bulkheads"
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: The story in the zoo
+      description: What goes wrong while the pattern is missing, and what changes once it is built?
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options: [Classic, Hard, Hard++]

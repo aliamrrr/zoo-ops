@@ -1,0 +1,11 @@
+name: Idea
+description: A new incident, animal, hint or improvement.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should the player see or learn that they cannot today?
+    validations:
+      required: true

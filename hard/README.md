@@ -17,7 +17,8 @@ components it talks to. A ticket only ships, in the game, when its tests pass **
 block is in the right place.
 
 ```bash
-python -m zoo play --mode hard
+./zoo.sh play hard        # macOS, Linux, WSL
+.\zoo.cmd play hard        # Windows
 ```
 
 ## Run the service
@@ -77,4 +78,5 @@ migration file, never by editing an applied one.
 python -m zoo reset --mode hard --project
 ```
 
-This restores `hard/src/zoo_platform` from the `hard-starter` tag and discards your changes there.
+This restores `hard/src/zoo_platform` to the version you started from (where your branch left
+`main`) and discards your changes there.

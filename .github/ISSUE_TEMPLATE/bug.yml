@@ -1,0 +1,27 @@
+name: Bug
+description: Something in the game or the tooling does not work.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      placeholder: "1. ./zoo.sh play hard\n2. ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options: [Classic, Hard, Hard++, Not about a mode]
+  - type: input
+    id: setup
+    attributes:
+      label: How you run it
+      placeholder: "Windows 11, zoo.cmd, Python 3.12 / macOS, Docker / ..."
