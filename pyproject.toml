@@ -17,20 +17,20 @@ classifiers = [
 # The game is an application, so it pins what it was tested with: a learner's red test must
 # mean their code, never a new release of a dependency. Dependabot proposes the upgrades.
 dependencies = [
-    "fastapi==0.115.6",
-    "uvicorn==0.32.1",
-    "pydantic==2.14.3",
-    "rich==13.9.4",
-    "pytest==8.3.4",
-    "redis==5.2.1",
-    "fakeredis==2.26.2",
-    "PyJWT==2.10.1",
+    "fastapi==0.165.0",
+    "uvicorn==0.54.0",
+    "pydantic==2.14.4",
+    "rich==15.0.0",
+    "pytest==9.2.0",
+    "redis==8.1.0",
+    "fakeredis==2.40.0",
+    "PyJWT==2.15.1",
     "httpx==0.28.1",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.8.4",
+    "ruff==0.17.6",
     "mypy==2.4.1",
     "pytest-cov==7.1.0",
     "pre-commit==4.7.0",
